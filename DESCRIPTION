@@ -1,0 +1,14 @@
+Package: FluMoDL
+Type: Package
+Imports: splines, tcltk
+Title: Influenza-attributable mortality with distributed-lag models
+Version: 0.0.1
+Author: Theodore Lytras
+Maintainer: Theodore Lytras <thlytras@gmail.com>
+Depends: dlnm
+Description: This package uses distributed-lag nonlinear models to estimate
+    the mortality attributed to influenza and temperature. 
+License: GPL (>=2)
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.1
