@@ -219,3 +219,22 @@ fitFluMoDL <- function(deaths, temp, dates, proxyH1, proxyH3, proxyB, yearweek, 
   return(res)
 }
 
+
+
+
+#' @method print FluMoDL
+#' @export
+print.FluMoDL <- function(m) {
+  cat("\n** FluMoDL model object **\n\n")
+  cat(sprintf("From %s to %s (%s rows)\n",
+              min(m$data$dates, na.rm=TRUE), max(m$data$dates, na.rm=TRUE), nrow(m$data)))
+  cat(sprintf("%s total deaths in the data\n", sum(m$data$deaths)))
+  cat(sprintf("Minimum mortality point (temperature): %s\n", m$MMP))
+  mid <- ceiling(length(m$pred$proxyH1$allfit)/2)
+  cat(sprintf("Relative Risk for an indicative influenza activity proxy of %s:\n",
+              names(m$pred$proxyH1$allfit)[mid]))
+  cat(sprintf("Influenza A(H1N1)pdm09 = %.3f\n", exp(m$pred$proxyH1$allfit[mid])))
+  cat(sprintf("Influenza A(H3N2)      = %.3f\n", exp(m$pred$proxyH3$allfit[mid])))
+  cat(sprintf("Influenza B            = %.3f\n", exp(m$pred$proxyB$allfit[mid])))
+
+}
