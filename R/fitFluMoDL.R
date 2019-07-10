@@ -21,6 +21,9 @@
 #' @param proxyB A vector of \emph{weekly} influenza B incidence proxies, of equal
 #'   length to argument \code{`yearweek`}
 #' @param yearweek An integer vector of weeks, in \emph{yyyyww} format
+#' @param proxyRSV An \emph{optional} vector of \emph{weekly} RSV incidence proxies, of equal
+#'   length to argument \code{`yearweek`}. (This is an experimental feature, and this argument
+#'   might be removed in the future.)
 #' @param smooth \code{TRUE} (the default) if smoothing is to be applied to the influenza
 #'   activity proxies when converting them to a daily series.
 #'
@@ -34,16 +37,22 @@
 #'     equidistant in the log scale.
 #'
 #'     \item Three [cross-basis matrices][dlnm::crossbasis()] for influenza activity proxies for
-#'     each type/subtype: A(H1N1)pdm09, A(H3N2) and B. These normally are equal to a sentinel
-#'     Influenza-Like Illness (ILI) rate, times the laboratory swab samples Percentage Positive
-#'     (%%) for each type. The exposure-response relationship is specified as linear, implying
-#'     an approximately constant case fatality ratio for each influenza type. The lag-response
-#'     relationship is specified as above (for temperature).
+#'     each type/subtype: A(H1N1)pdm09, A(H3N2) and B. These normally are equal to a
+#'     sentinel Influenza-Like Illness (ILI) rate, times the laboratory swab samples Percentage
+#'     Positive (%%) for each type. The exposure-response relationship is specified as linear,
+#'     implying an approximately constant case fatality ratio for each influenza type. The
+#'     lag-response relationship is specified as above (for temperature).
 #'
 #'     \item A periodic B-spline term to model seasonality, with three equidistant internal
 #'     knots according to day of the year.
 #'
 #'     \item A linear trend, and a factor variable for day of the week.
+#'
+#'     \item \emph{Optionally}, a [cross-basis matrix][dlnm::crossbasis()] for an RSV
+#'     activity proxy, with specification identical to those for influenza. If given,
+#'     it will be included in the model and output, and it will be possible to calculate
+#'     mortality attributable to RSV with [attrMort()]. This is an experimental feature;
+#'     it might be removed in the future.
 #'   }
 #'
 #'
@@ -54,17 +63,19 @@
 #'     \code{deaths}, \code{temp}, (for temperature), \code{proxyH1}, \code{proxyH3}, \code{proxyB},
 #'     \code{t} (linear trend, with values \code{1:nrow(m$data)}), \code{doy} (day of year,
 #'     use to calculate the periodic B-spline term to model seasonality) and \code{dow} (day of
-#'     the week).}
+#'     the week). Also column \code{proxyRSV} if the relevant argument is provided.}
 #'
 #'     \item{$model}{The fitted model; an object of class \code{glm} and of 'quasipoisson' family
 #'     with log link.}
 #'
-#'     \item{$basis}{A list with names 'temp', 'proxyH1', 'proxyH3' and 'proxyB', containing the
-#'     four cross-basis matrices that are used as exposures in the model. See [dlnm::crossbasis()]}
+#'     \item{$basis}{A list with names 'temp', 'proxyH1', 'proxyH3' and 'proxyB' (and proxyRSV,
+#'     if provided in the function arguments), containing the
+#'     cross-basis matrices that are used as exposures in the model. See [dlnm::crossbasis()]}
 #'
 #'     \item{$MMP}{The Minimum Mortality Point, i.e. the temperature where mortality is lowest.}
 #'
-#'     \item{$pred}{A list with names 'temp', 'proxyH1', 'proxyH3' and 'proxyB', containing
+#'     \item{$pred}{A list with names 'temp', 'proxyH1', 'proxyH3' and 'proxyB' (and proxyRSV
+#'     if provided in the function arguments), containing
 #'     predictions (in the form of \code{crosspred} objects) for each exposure. These can be
 #'     plotted in both the exposure-response and lag-response dimensions, see
 #'     [dlnm::crosspred()], [dlnm::plot.crosspred()] and the examples below.}
@@ -93,6 +104,7 @@
 #'     proxyH3 = weekly$ILI * weekly$ppH3,
 #'     proxyB = weekly$ILI * weekly$ppB,
 #'     yearweek = weekly$yearweek))
+#' m
 #'
 #' # Plot the association between A(H1N1)pdm09 activity and mortality
 #'     and the overall temperature-mortality association:
@@ -113,48 +125,53 @@
 #'
 #' @export
 
-fitFluMoDL <- function(deaths, temp, dates, proxyH1, proxyH3, proxyB, yearweek, smooth=TRUE) {
+fitFluMoDL <- function(deaths, temp, dates, proxyH1, proxyH3, proxyB, yearweek,
+                           proxyRSV=NULL, smooth=TRUE) {
 
   # Checking all parameters for consistency
-    if (class(dates)!="Date") stop("Argument `dates` must be a vector of class 'Date'.")
-    if (length(yearweek)!=length(proxyH1) ||
-        length(yearweek)!=length(proxyH3) ||
-        length(yearweek)!=length(proxyB)) {
-      stop("Arguments `proxyH1`, `proxyH3`, `proxyB` and `yearweek` must have the same vector length.")
-    }
-    if (length(deaths)!=length(dates) || length(temp)!=length(dates)) {
-      stop("Arguments `deaths`, `temp` and `dates` must have the same vector length.")
-    }
+  if (class(dates)!="Date") stop("Argument `dates` must be a vector of class 'Date'.")
+  if (length(yearweek)!=length(proxyH1) ||
+      length(yearweek)!=length(proxyH3) ||
+      length(yearweek)!=length(proxyB)) {
+    stop("Arguments `proxyH1`, `proxyH3`, `proxyB` and `yearweek` must have the same vector length.")
+  }
+  if (!is.null(proxyRSV) && length(yearweek)!=length(proxyRSV)) {
+    stop("Arguments `proxyRSV` and `yearweek` must have the same vector length.")
+  }
+  if (length(deaths)!=length(dates) || length(temp)!=length(dates)) {
+    stop("Arguments `deaths`, `temp` and `dates` must have the same vector length.")
+  }
 
   # Check for missing values
-    miss <- unlist(sapply(c("deaths","temp","dates","proxyH1","proxyH3","proxyB","yearweek"),
-        function(x) if (sum(is.na(get(x)))>0) return(x) else return(character(0))))
-    if (length(miss)>0)
-        stop(sprintf("No missing values are allowed for argument%s `%s`.",
-            ifelse(length(miss)>1, "(s)", ""),
-            paste(miss, collapse="`, `")))
+  miss <- unlist(sapply(c("deaths","temp","dates","proxyH1","proxyH3","proxyB","yearweek","proxyRSV"),
+                        function(x) if (!is.null(get(x)) && sum(is.na(get(x)))>0) return(x) else return(character(0))))
+  if (length(miss)>0)
+    stop(sprintf("No missing values are allowed for argument%s `%s`.",
+                 ifelse(length(miss)>1, "(s)", ""),
+                 paste(miss, collapse="`, `")))
 
   # Check date range
-    range_dates <- range(dates)
-    date_range <- c(max(c(min(dates), isoweekStart(min(yearweek)))),
-        min(c(max(dates), isoweekStart(max(yearweek))+6)))
-    date_range[2] <- date_range[2] - as.integer(format(date_range[2], "%w"))
-    if (diff(date_range)<=0) stop("The provided `dates` and `yearweek` do not overlap at all.")
-    if (diff(date_range)<60) stop("Cannot fit model with less than 60 days of data.")
+  range_dates <- range(dates)
+  date_range <- c(max(c(min(dates), isoweekStart(min(yearweek)))),
+                  min(c(max(dates), isoweekStart(max(yearweek))+6)))
+  date_range[2] <- date_range[2] - as.integer(format(date_range[2], "%w"))
+  if (diff(date_range)<=0) stop("The provided `dates` and `yearweek` do not overlap at all.")
+  if (diff(date_range)<60) stop("Cannot fit model with less than 60 days of data.")
 
   # Setting up everything in a data.frame
-    dat <- subset(data.frame(dates, deaths, temp), dates>=date_range[1] & dates<=date_range[2])
-    dat$yearweek <- isoweek(dat$dates)
-    dat <- dat[,c("yearweek", "dates", "deaths", "temp")]  # Rearrange in a more logical order
-    dat$proxyH1 <- proxyH1[match(dat$yearweek, yearweek)]
-    dat$proxyH3 <- proxyH3[match(dat$yearweek, yearweek)]
-    dat$proxyB <- proxyB[match(dat$yearweek, yearweek)]
+  dat <- subset(data.frame(dates, deaths, temp), dates>=date_range[1] & dates<=date_range[2])
+  dat$yearweek <- isoweek(dat$dates)
+  dat <- dat[,c("yearweek", "dates", "deaths", "temp")]  # Rearrange in a more logical order
+  dat$proxyH1 <- proxyH1[match(dat$yearweek, yearweek)]
+  dat$proxyH3 <- proxyH3[match(dat$yearweek, yearweek)]
+  dat$proxyB <- proxyB[match(dat$yearweek, yearweek)]
+  if (!is.null(proxyRSV)) dat$proxyRSV <- proxyRSV[match(dat$yearweek, yearweek)]
 
   # Check if there's any discontinuity in the dates and yearweeks
-    if (sum(diff(dat$dates)!=1)>0)
-      stop("Discontinuities found in the `dates` argument.")
-    if (sum(is.na(dat$yearweek))>0)
-      stop("Discontinuities found in the `yearweek` argument.")
+  if (sum(diff(dat$dates)!=1)>0)
+    stop("Discontinuities found in the `dates` argument.")
+  if (sum(is.na(dat$yearweek))>0)
+    stop("Discontinuities found in the `yearweek` argument.")
 
   # Smooth influenza incidence proxies is smooth=TRUE
   if (smooth) {
@@ -164,58 +181,79 @@ fitFluMoDL <- function(deaths, temp, dates, proxyH1, proxyH3, proxyB, yearweek, 
     dat$proxyH1[dat$proxyH1<0] <- 0
     dat$proxyH3[dat$proxyH3<0] <- 0
     dat$proxyB[dat$proxyB<0] <- 0
+    if (!is.null(proxyRSV)) {
+      dat$proxyRSV <- smooth.spline(dat$proxyRSV, df=floor(nrow(dat)/7))$y
+      dat$proxyRSV[dat$proxyRSV<0] <- 0
+    }
   }
 
   lg <- 30  # 30 days maximum lag (fixed)
 
   # Create cross-basis matrices
-    basis.temp <- crossbasis(dat$temp, lag=lg,
-        argvar=list(fun="bs", degree=2, knots=quantile(dat$temp, c(0.1,0.75,0.9))),
-        arglag=list(fun="ns", knots=logknots(lg,3)))
-    basis.proxyH1 <- crossbasis(dat$proxyH1, lag=lg,
-        argvar=list(fun="poly", degree=1),
-        arglag=list(fun="ns", knots=logknots(lg,3)))
-    basis.proxyH3 <- crossbasis(dat$proxyH3, lag=lg,
-        argvar=list(fun="poly", degree=1),
-        arglag=list(fun="ns", knots=logknots(lg,3)))
-    basis.proxyB <- crossbasis(dat$proxyB, lag=lg,
-        argvar=list(fun="poly", degree=1),
-        arglag=list(fun="ns", knots=logknots(lg,3)))
+  basis.temp <- crossbasis(dat$temp, lag=lg,
+                           argvar=list(fun="bs", degree=2, knots=quantile(dat$temp, c(0.1,0.75,0.9))),
+                           arglag=list(fun="ns", knots=logknots(lg,3)))
+  basis.proxyH1 <- crossbasis(dat$proxyH1, lag=lg,
+                              argvar=list(fun="poly", degree=1),
+                              arglag=list(fun="ns", knots=logknots(lg,3)))
+  basis.proxyH3 <- crossbasis(dat$proxyH3, lag=lg,
+                              argvar=list(fun="poly", degree=1),
+                              arglag=list(fun="ns", knots=logknots(lg,3)))
+  basis.proxyB <- crossbasis(dat$proxyB, lag=lg,
+                             argvar=list(fun="poly", degree=1),
+                             arglag=list(fun="ns", knots=logknots(lg,3)))
+  if (!is.null(proxyRSV)) {
+    basis.proxyRSV <- crossbasis(dat$proxyRSV, lag=lg,
+                                 argvar=list(fun="poly", degree=1),
+                                 arglag=list(fun="ns", knots=logknots(lg,3)))
+  }
 
   # Fit DLNM
-    dat$t <- 1:nrow(dat)   # Linear trend
-    dat$doy <- as.integer(format(dat$dates, "%j"))   # Day of the year
-    dat$dow <- as.factor(format(dat$dates,"%u"))   # Day of the week
+  dat$t <- 1:nrow(dat)   # Linear trend
+  dat$doy <- as.integer(format(dat$dates, "%j"))   # Day of the year
+  dat$dow <- as.factor(format(dat$dates,"%u"))   # Day of the week
+  if (is.null(proxyRSV)) {
     model <- glm(deaths ~ basis.temp + basis.proxyH1 + basis.proxyH3 + basis.proxyB +
-        dow + t + pbs(doy, knots=c(91,182,274)), data=dat, family="quasipoisson")
+                   dow + t + pbs(doy, knots=c(91,182,274)), data=dat, family="quasipoisson")
+  } else {
+    model <- glm(deaths ~ basis.temp + basis.proxyH1 + basis.proxyH3 + basis.proxyB +
+                   basis.proxyRSV + dow + t + pbs(doy, knots=c(91,182,274)), data=dat, family="quasipoisson")
+  }
 
   # Make predictions
-    predTemp <- crosspred(basis.temp, model,
-        at = seq(ceiling(min(dat$temp)), floor(max(dat$temp)), 1),
-        bylag=0.2, cen=round(median(dat$temp)), cumul=TRUE)
-    # Calculate Minimum Mortality Point
-    MMP <- as.integer(names(which(predTemp$allfit==min(predTemp$allfit))))
-    # Refit prediction for temperature, centered at the MMP
-    predTemp <- crosspred(basis.temp, model,
-        at = seq(ceiling(min(dat$temp)), floor(max(dat$temp)), 1),
-        bylag=0.2, cen=MMP, cumul=TRUE)
-    # Predictions (linear) for influenza proxies
-    pL <- pretty(c(0,ceiling(max(dat[,c("proxyH1","proxyH3","proxyB")]))), 30)
-    predProxyH3 <- crosspred(basis.proxyH3, model, at=pL, bylag=0.2, cen=0, cumul=TRUE)
-    predProxyH1 <- crosspred(basis.proxyH1, model, at=pL, bylag=0.2, cen=0, cumul=TRUE)
-    predProxyB <- crosspred(basis.proxyB, model, at=pL, bylag=0.2, cen=0, cumul=TRUE)
+  predTemp <- crosspred(basis.temp, model,
+                        at = seq(ceiling(min(dat$temp)), floor(max(dat$temp)), 1),
+                        bylag=0.2, cen=round(median(dat$temp)), cumul=TRUE)
+  # Calculate Minimum Mortality Point
+  MMP <- as.integer(names(which(predTemp$allfit==min(predTemp$allfit))))
+  # Refit prediction for temperature, centered at the MMP
+  predTemp <- crosspred(basis.temp, model,
+                        at = seq(ceiling(min(dat$temp)), floor(max(dat$temp)), 1),
+                        bylag=0.2, cen=MMP, cumul=TRUE)
+  # Predictions (linear) for influenza proxies
+  pL <- pretty(c(0,ceiling(max(dat[,c("proxyH1","proxyH3","proxyB")]))), 30)
+  predProxyH3 <- crosspred(basis.proxyH3, model, at=pL, bylag=0.2, cen=0, cumul=TRUE)
+  predProxyH1 <- crosspred(basis.proxyH1, model, at=pL, bylag=0.2, cen=0, cumul=TRUE)
+  predProxyB <- crosspred(basis.proxyB, model, at=pL, bylag=0.2, cen=0, cumul=TRUE)
+  if (!is.null(proxyRSV)) {
+    predProxyRSV <- crosspred(basis.proxyRSV, model, at=pL, bylag=0.2, cen=0, cumul=TRUE)
+  }
 
 
   # Pack it all together
-    res <- list(
-        data = dat, model = model,
-        basis = list(temp = basis.temp, proxyH1 = basis.proxyH1,
-            proxyH3 = basis.proxyH3, proxyB = basis.proxyB),
-        MMP = MMP,
-        pred = list(temp = predTemp, proxyH1 = predProxyH1,
-            proxyH3 = predProxyH3, proxyB = predProxyB)
-    )
-    class(res) <- c("FluMoDL", "list")
+  res <- list(
+    data = dat, model = model,
+    basis = list(temp = basis.temp, proxyH1 = basis.proxyH1,
+                 proxyH3 = basis.proxyH3, proxyB = basis.proxyB),
+    MMP = MMP,
+    pred = list(temp = predTemp, proxyH1 = predProxyH1,
+                proxyH3 = predProxyH3, proxyB = predProxyB)
+  )
+  if (!is.null(proxyRSV)) {
+    res$basis$proxyRSV <- basis.proxyRSV
+    res$pred$proxyRSV <- predProxyRSV
+  }
+  class(res) <- c("FluMoDL", "list")
   return(res)
 }
 
@@ -231,10 +269,24 @@ print.FluMoDL <- function(m) {
   cat(sprintf("%s total deaths in the data\n", sum(m$data$deaths)))
   cat(sprintf("Minimum mortality point (temperature): %s\n", m$MMP))
   mid <- ceiling(length(m$pred$proxyH1$allfit)/2)
-  cat(sprintf("Relative Risk for an indicative influenza activity proxy of %s:\n",
+  cat(sprintf("Relative Risk for an indicative influenza activity proxy of %s: (95%% CI)\n",
               names(m$pred$proxyH1$allfit)[mid]))
-  cat(sprintf("Influenza A(H1N1)pdm09 = %.3f\n", exp(m$pred$proxyH1$allfit[mid])))
-  cat(sprintf("Influenza A(H3N2)      = %.3f\n", exp(m$pred$proxyH3$allfit[mid])))
-  cat(sprintf("Influenza B            = %.3f\n", exp(m$pred$proxyB$allfit[mid])))
+  cat(sprintf("Influenza A(H1N1)pdm09 = %.3f (%.3f - %.3f)\n",
+              exp(m$pred$proxyH1$allfit[mid]),
+              m$pred$proxyH1$allRRlow[mid], m$pred$proxyH1$allRRhigh[mid]))
+  cat(sprintf("Influenza A(H3N2)      = %.3f (%.3f - %.3f)\n",
+              exp(m$pred$proxyH3$allfit[mid]),
+              m$pred$proxyH3$allRRlow[mid], m$pred$proxyH3$allRRhigh[mid]))
+  cat(sprintf("Influenza B            = %.3f (%.3f - %.3f)\n",
+              exp(m$pred$proxyB$allfit[mid]),
+              m$pred$proxyB$allRRlow[mid], m$pred$proxyB$allRRhigh[mid]))
+  if (!is.null(m$pred$proxyRSV)) {
+    cat("Model contains a cross-basis term for RSV (Respiratory Syncytial Virus)\n")
+    cat(sprintf("RR for an indicative RSV activity proxy of %s = %.3f (%.3f - %.3f)\n",
+                names(m$pred$proxyRSV$allfit)[mid],
+                exp(m$pred$proxyRSV$allfit[mid]),
+                m$pred$proxyRSV$allRRlow[mid],
+                m$pred$proxyRSV$allRRhigh[mid]))
+  }
 
 }

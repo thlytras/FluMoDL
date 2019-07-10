@@ -2,9 +2,9 @@
 % Please edit documentation in R/attrMort.R
 \name{attrMort}
 \alias{attrMort}
-\title{Influenza- and temperature-attributable mortality for a FluMoDL object}
+\title{Influenza- and temperature-attributable mortality for a FluMoDL object  (experimental version with RSV term)}
 \usage{
-attrMort(m, par = c("H1", "H3", "B", "temp"), sel = "week",
+attrMort(m, par = c("H1", "H3", "B", "temp", "RSV"), sel = "week",
   from = NULL, to = NULL, temprange = "cold", ci = TRUE,
   nsim = 5000, mcsamples = FALSE, progress = TRUE)
 }
@@ -12,8 +12,8 @@ attrMort(m, par = c("H1", "H3", "B", "temp"), sel = "week",
 \item{m}{An object of class \code{FluMoDL}.}
 
 \item{par}{A character vector indicating which exposures to calculate the
-attributable mortality for. Defaults to \code{c("H1","H3","B","temp")}, which
-indicates all three influenza proxies and temperature.}
+attributable mortality for. Defaults to \code{c("H1","H3","B","temp","RSV")}, which
+indicates all three influenza proxies, temperature and RSV (if it exists in the model).}
 
 \item{sel}{For which time period(s) to calculate attributable mortality. This can be
 one of several choices. For \code{sel="week"} (the default) and \code{sel="season"} attributable
@@ -59,8 +59,9 @@ run and if there are more than three time periods selected in argument \code{sel
 }
 \value{
 If \code{mcsamples=FALSE} (the default), a data.frame is returned with columns named
-  'FluH1', 'FluH3', 'FluB' and 'Temp' (depending on the argument \code{par}) and also 'FluH1.lo',
-  'FluH1.hi', 'FluH3.lo', ..., if \code{ci=TRUE}. Each row in the output corresponds to a selection
+  'FluH1', 'FluH3', 'FluB' and 'Temp' (and/or 'RSV'), depending on the argument \code{par},
+  and also 'FluH1.lo', 'FluH1.hi', 'FluH3.lo', ..., if \code{ci=TRUE}. Each row in the output
+  corresponds to a selection
   made in argument \code{sel}, for example if \code{sel="week"} (the default) rows correspond to
   each week available in the data. If all influenza types/subtypes are selected in \code{par}, a
   column named 'AllFlu' is also calculated automatically, with the mortality (and 95%% CI)

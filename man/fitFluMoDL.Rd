@@ -5,7 +5,7 @@
 \title{Fit a FluMoDL object}
 \usage{
 fitFluMoDL(deaths, temp, dates, proxyH1, proxyH3, proxyB, yearweek,
-  smooth = TRUE)
+  proxyRSV = NULL, smooth = TRUE)
 }
 \arguments{
 \item{deaths}{A vector of \emph{daily} deaths, of equal length to argument \code{`dates`}}
@@ -25,6 +25,10 @@ length to argument \code{`yearweek`}}
 
 \item{yearweek}{An integer vector of weeks, in \emph{yyyyww} format}
 
+\item{proxyRSV}{An \emph{optional} vector of \emph{weekly} RSV incidence proxies, of equal
+length to argument \code{`yearweek`}. (This is an experimental feature, and this argument
+might be removed in the future.)}
+
 \item{smooth}{\code{TRUE} (the default) if smoothing is to be applied to the influenza
 activity proxies when converting them to a daily series.}
 }
@@ -36,17 +40,19 @@ An object of class 'FluMoDL'. This is a list containing the following elements:
     \code{deaths}, \code{temp}, (for temperature), \code{proxyH1}, \code{proxyH3}, \code{proxyB},
     \code{t} (linear trend, with values \code{1:nrow(m$data)}), \code{doy} (day of year,
     use to calculate the periodic B-spline term to model seasonality) and \code{dow} (day of
-    the week).}
+    the week). Also column \code{proxyRSV} if the relevant argument is provided.}
 
     \item{$model}{The fitted model; an object of class \code{glm} and of 'quasipoisson' family
     with log link.}
 
-    \item{$basis}{A list with names 'temp', 'proxyH1', 'proxyH3' and 'proxyB', containing the
-    four cross-basis matrices that are used as exposures in the model. See [dlnm::crossbasis()]}
+    \item{$basis}{A list with names 'temp', 'proxyH1', 'proxyH3' and 'proxyB' (and proxyRSV,
+    if provided in the function arguments), containing the
+    cross-basis matrices that are used as exposures in the model. See [dlnm::crossbasis()]}
 
     \item{$MMP}{The Minimum Mortality Point, i.e. the temperature where mortality is lowest.}
 
-    \item{$pred}{A list with names 'temp', 'proxyH1', 'proxyH3' and 'proxyB', containing
+    \item{$pred}{A list with names 'temp', 'proxyH1', 'proxyH3' and 'proxyB' (and proxyRSV
+    if provided in the function arguments), containing
     predictions (in the form of \code{crosspred} objects) for each exposure. These can be
     plotted in both the exposure-response and lag-response dimensions, see
     [dlnm::crosspred()], [dlnm::plot.crosspred()] and the examples below.}
@@ -75,16 +81,22 @@ FluMoDL uses a DLNM with the \emph{daily} number of deaths as the outcome. Covar
     equidistant in the log scale.
 
     \item Three [cross-basis matrices][dlnm::crossbasis()] for influenza activity proxies for
-    each type/subtype: A(H1N1)pdm09, A(H3N2) and B. These normally are equal to a sentinel
-    Influenza-Like Illness (ILI) rate, times the laboratory swab samples Percentage Positive
-    (%%) for each type. The exposure-response relationship is specified as linear, implying
-    an approximately constant case fatality ratio for each influenza type. The lag-response
-    relationship is specified as above (for temperature).
+    each type/subtype: A(H1N1)pdm09, A(H3N2) and B. These normally are equal to a
+    sentinel Influenza-Like Illness (ILI) rate, times the laboratory swab samples Percentage
+    Positive (%%) for each type. The exposure-response relationship is specified as linear,
+    implying an approximately constant case fatality ratio for each influenza type. The
+    lag-response relationship is specified as above (for temperature).
 
     \item A periodic B-spline term to model seasonality, with three equidistant internal
     knots according to day of the year.
 
     \item A linear trend, and a factor variable for day of the week.
+
+    \item \emph{Optionally}, a [cross-basis matrix][dlnm::crossbasis()] for an RSV
+    activity proxy, with specification identical to those for influenza. If given,
+    it will be included in the model and output, and it will be possible to calculate
+    mortality attributable to RSV with [attrMort()]. This is an experimental feature;
+    it might be removed in the future.
   }
 }
 \examples{
@@ -95,6 +107,7 @@ m <- with(greece, fitFluMoDL(deaths = daily$deaths,
     proxyH3 = weekly$ILI * weekly$ppH3,
     proxyB = weekly$ILI * weekly$ppB,
     yearweek = weekly$yearweek))
+m
 
 # Plot the association between A(H1N1)pdm09 activity and mortality
     and the overall temperature-mortality association:

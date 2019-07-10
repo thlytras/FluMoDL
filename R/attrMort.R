@@ -1,4 +1,4 @@
-#' Influenza- and temperature-attributable mortality for a FluMoDL object
+#' Influenza- and temperature-attributable mortality for a FluMoDL object  (experimental version with RSV term)
 #'
 #' This function uses an object of class \code{FluMoDL} to calculate mortality
 #' attributed to influenza and/or temperature.
@@ -6,8 +6,8 @@
 #' @param m An object of class \code{FluMoDL}.
 #'
 #' @param par A character vector indicating which exposures to calculate the
-#' attributable mortality for. Defaults to \code{c("H1","H3","B","temp")}, which
-#' indicates all three influenza proxies and temperature.
+#' attributable mortality for. Defaults to \code{c("H1","H3","B","temp","RSV")}, which
+#' indicates all three influenza proxies, temperature and RSV (if it exists in the model).
 #'
 #' @param sel For which time period(s) to calculate attributable mortality. This can be
 #' one of several choices. For \code{sel="week"} (the default) and \code{sel="season"} attributable
@@ -69,8 +69,9 @@
 #'
 #'
 #' @return If \code{mcsamples=FALSE} (the default), a data.frame is returned with columns named
-#'   'FluH1', 'FluH3', 'FluB' and 'Temp' (depending on the argument \code{par}) and also 'FluH1.lo',
-#'   'FluH1.hi', 'FluH3.lo', ..., if \code{ci=TRUE}. Each row in the output corresponds to a selection
+#'   'FluH1', 'FluH3', 'FluB' and 'Temp' (and/or 'RSV'), depending on the argument \code{par},
+#'   and also 'FluH1.lo', 'FluH1.hi', 'FluH3.lo', ..., if \code{ci=TRUE}. Each row in the output
+#'   corresponds to a selection
 #'   made in argument \code{sel}, for example if \code{sel="week"} (the default) rows correspond to
 #'   each week available in the data. If all influenza types/subtypes are selected in \code{par}, a
 #'   column named 'AllFlu' is also calculated automatically, with the mortality (and 95%% CI)
@@ -122,151 +123,161 @@
 #' attr4 <- attrMort(m, sel="season", from=2017, to=2017, mcsamples=TRUE)
 #'
 #' @export
-attrMort <- function(m, par=c("H1","H3","B","temp"), sel="week", from=NULL, to=NULL,
-        temprange="cold", ci=TRUE, nsim=5000, mcsamples=FALSE, progress=TRUE) {
+attrMort <- function(m, par=c("H1","H3","B","temp","RSV"), sel="week", from=NULL, to=NULL,
+                         temprange="cold", ci=TRUE, nsim=5000, mcsamples=FALSE, progress=TRUE) {
   # Check arguments
-    if (!("FluMoDL" %in% class(m))) stop("Argument `m` should be of class 'FluMoDL'.")
-    par <- par[par %in% c("H1", "H3", "B", "temp")]
-    if (length(par)==0) stop("Argument `par` should be at least one of 'H1', 'H3', 'B', 'temp'.")
+  if (!("FluMoDL" %in% class(m))) stop("Argument `m` should be of class 'FluMoDL'.")
+  if ((is.null(m$pred$proxyRSV) || is.null(m$data$proxyRSV)) && sum(par=="RSV")>0) {
+    par <- par[par!="RSV"]
+  }
+  par <- par[par %in% c("H1", "H3", "B", "temp", "RSV")]
+  if (length(par)==0) stop("Argument `par` should be at least one of 'H1', 'H3', 'B', 'temp', 'RSV'.")
 
   # Determine selections for which to calculate attributable mortality
-    if (length(sel)==1 && sel=="week") {
-      weeks_in_dataset <- sort(unique(m$data$yearweek))
-      if (!is.null(from)) weeks_in_dataset <- weeks_in_dataset[weeks_in_dataset>=from]
-      if (!is.null(to)) weeks_in_dataset <- weeks_in_dataset[weeks_in_dataset<=to]
-      if (length(weeks_in_dataset)==0) stop("No weeks left in dataset after filtering with arguments `from` and `to`.")
-      selIndices <- lapply(weeks_in_dataset, function(x) which(m$data$yearweek==x))
-      selNames <- weeks_in_dataset
+  if (length(sel)==1 && sel=="week") {
+    weeks_in_dataset <- sort(unique(m$data$yearweek))
+    if (!is.null(from)) weeks_in_dataset <- weeks_in_dataset[weeks_in_dataset>=from]
+    if (!is.null(to)) weeks_in_dataset <- weeks_in_dataset[weeks_in_dataset<=to]
+    if (length(weeks_in_dataset)==0) stop("No weeks left in dataset after filtering with arguments `from` and `to`.")
+    selIndices <- lapply(weeks_in_dataset, function(x) which(m$data$yearweek==x))
+    selNames <- weeks_in_dataset
 
-    } else if (length(sel)==1 && sel=="season") {
-      seasons <- with(m$data,
-        (yearweek%/%100 - as.integer(yearweek%%100<=20))*(yearweek%%100<=20 | yearweek%%100>=40))
-      seasons[seasons==0] <- NA
-      seasons_in_dataset <- sort(unique(seasons)[!is.na(unique(seasons))])
-      if (!is.null(from)) seasons_in_dataset <- seasons_in_dataset[seasons_in_dataset>=from]
-      if (!is.null(to)) seasons_in_dataset <- seasons_in_dataset[seasons_in_dataset<=to]
-      if (length(seasons_in_dataset)==0) stop("No seasons left in dataset after filtering with arguments `from` and `to`.")
-      selIndices <- lapply(seasons_in_dataset, function(x) which(seasons==x))
-      selNames <- seasons_in_dataset
+  } else if (length(sel)==1 && sel=="season") {
+    seasons <- with(m$data,
+                    (yearweek%/%100 - as.integer(yearweek%%100<=20))*(yearweek%%100<=20 | yearweek%%100>=40))
+    seasons[seasons==0] <- NA
+    seasons_in_dataset <- sort(unique(seasons)[!is.na(unique(seasons))])
+    if (!is.null(from)) seasons_in_dataset <- seasons_in_dataset[seasons_in_dataset>=from]
+    if (!is.null(to)) seasons_in_dataset <- seasons_in_dataset[seasons_in_dataset<=to]
+    if (length(seasons_in_dataset)==0) stop("No seasons left in dataset after filtering with arguments `from` and `to`.")
+    selIndices <- lapply(seasons_in_dataset, function(x) which(seasons==x))
+    selNames <- seasons_in_dataset
 
-    } else if (is.matrix(sel)) {
-      if (!is.logical(sel) || nrow(sel)!=nrow(m$data)) stop("If argument `sel` is a matrix, it should be a logical matrix with number of rows equal to the number of rows in `m$data`.")
-      selIndices <- name(as.list(as.data.frame(sel)))
-      selNames <- colnames(sel)
+  } else if (is.matrix(sel)) {
+    if (!is.logical(sel) || nrow(sel)!=nrow(m$data)) stop("If argument `sel` is a matrix, it should be a logical matrix with number of rows equal to the number of rows in `m$data`.")
+    selIndices <- name(as.list(as.data.frame(sel)))
+    selNames <- colnames(sel)
 
-    } else if (class(sel)=="list") {
-      selIndices <- sel
-      selNames <- names(sel)
+  } else if (class(sel)=="list") {
+    selIndices <- sel
+    selNames <- names(sel)
 
-    } else if (is.numeric(sel) || is.logical(sel)) {
-      selIndices <- list(sel)
-      selNames <- NULL
+  } else if (is.numeric(sel) || is.logical(sel)) {
+    selIndices <- list(sel)
+    selNames <- NULL
 
+  } else {
+    stop("Inappropriate value in argument `sel`. It should be one of 'week' or 'season', or a logical matrix, or an index vector or list of index vectors.")
+  }
+
+  # selIndices should now contain a list of index vectors. Let's see now whether these are appropriate
+  for (i in 1:length(selIndices)) {
+    if (is.logical(selIndices[[i]])) {
+      selIndices[[i]] <- which(selIndices[[i]])
+    }
+    if (is.numeric(selIndices[[i]])) {
+      selIndices[[i]] <- sort(unique(as.integer(selIndices[[i]])))
+      selIndices[[i]] <- selIndices[[i]][selIndices[[i]]<=nrow(m$data)]
+      if (length(selIndices[[i]])==0) stop(sprintf("In element %s of `sel`, no valid indices found.", i))
+      if (sum(diff(selIndices[[i]])!=1)>0) stop(sprintf("In element %s of `sel`, a non-contiguous range of indices was given.", i))
     } else {
-      stop("Inappropriate value in argument `sel`. It should be one of 'week' or 'season', or a logical matrix, or an index vector or list of index vectors.")
+      stop(sprintf("In element %s of `sel`, found neither a logical nor an integer index vector.", i))
     }
-
-    # selIndices should now contain a list of index vectors. Let's see now whether these are appropriate
-    for (i in 1:length(selIndices)) {
-      if (is.logical(selIndices[[i]])) {
-        selIndices[[i]] <- which(selIndices[[i]])
-      }
-      if (is.numeric(selIndices[[i]])) {
-        selIndices[[i]] <- sort(unique(as.integer(selIndices[[i]])))
-        selIndices[[i]] <- selIndices[[i]][selIndices[[i]]<=nrow(m$data)]
-        if (length(selIndices[[i]])==0) stop(sprintf("In element %s of `sel`, no valid indices found.", i))
-        if (sum(diff(selIndices[[i]])!=1)>0) stop(sprintf("In element %s of `sel`, a non-contiguous range of indices was given.", i))
-      } else {
-        stop(sprintf("In element %s of `sel`, found neither a logical nor an integer index vector.", i))
-      }
-    }
+  }
 
   # Now everything should be correct, whoa!!
   # Time to loop through the selections and calculate the attributable number of cases.
-    if (!ci || length(selIndices)<=3) progress <- FALSE
-    if (progress) {
-      i=0
-      pb <- tcltk::tkProgressBar("FluMoDL",
-          sprintf("Calculating for %s selections...", length(selIndices)),
-          min=0, max=length(selIndices), initial=0)
-    }
-    res <- lapply(selIndices, function(s) {
-      if (progress) { i <<- i+1; tcltk::setTkProgressBar(pb, i) }
-      p <- list()
-      mc <- list()
-      if ("temp" %in% par) {
-        # First determine the required temperature range
-        if (length(temprange)==1 && temprange=="cold") {
-          tRange <- c(floor(min(m$data$temp)), m$MMP)
-        } else if (length(temprange)==1 && temprange=="heat") {
-          tRange <- c(m$MMP, ceiling(max(m$data$temp)))
-        } else if (length(temprange)==1 && temprange=="all") {
-          tRange <- c(floor(min(m$data$temp)), ceiling(max(m$data$temp)))
-        } else if (length(temprange)==2 && is.vector(temprange) && !is.list(temprange)) {
-          if (!is.na(match("MMP", temprange))) temprange[temprange=="MMP"] <- m$MMP
-          tRange <- as.numeric(temprange)
-          if (sum(is.na(tRange))>0) stop("Invalid value provided for argument `temprange`.")
-        } else {
-          tRange <- c(floor(min(m$data$temp)), ceiling(max(m$data$temp)))
-        }
-        basis.temp <- m$basis$temp
-        p$Temp <- attrdl(m$data$temp, basis.temp, m$data$deaths, m$model, cen=m$MMP, type="an",
-            sub=s, range=tRange)
-        if (ci || mcsamples) mc$Temp <- attrdl(m$data$temp, basis.temp, m$data$deaths, m$model,
-            cen=m$MMP, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim, range=tRange)
-      }
-      if ("B" %in% par) {
-        basis.proxyB <- m$basis$proxyB
-        p$FluB <- attrdl(m$data$proxyB, basis.proxyB, m$data$deaths, m$model, cen=0, type="an",
-            sub=s)
-        if (ci || mcsamples) mc$FluB <- attrdl(m$data$proxyB, basis.proxyB, m$data$deaths, m$model,
-            cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
-      }
-      if ("H3" %in% par) {
-        basis.proxyH3 <- m$basis$proxyH3
-        p$FluH3 <- attrdl(m$data$proxyH3, basis.proxyH3, m$data$deaths, m$model, cen=0, type="an",
-            sub=s)
-        if (ci || mcsamples) mc$FluH3 <- attrdl(m$data$proxyH3, basis.proxyH3, m$data$deaths, m$model,
-            cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
-      }
-      if ("H1" %in% par) {
-        basis.proxyH1 <- m$basis$proxyH1
-        p$FluH1 <- attrdl(m$data$proxyH1, basis.proxyH1, m$data$deaths, m$model, cen=0, type="an",
-            sub=s)
-        if (ci || mcsamples) mc$FluH1 <- attrdl(m$data$proxyH1, basis.proxyH1, m$data$deaths, m$model,
-            cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
-      }
-      if (sum(is.na(match(c("FluH1","FluH3","FluB"), names(p))))==0) {
-        p$AllFlu <- with(p, FluH1+FluH3+FluB)
-        if (ci || mcsamples) mc$AllFlu <- with(mc, FluH1+FluH3+FluB)
-      }
-      if (mcsamples) {
-        res <- list(
-            result = round(unlist(p[rev(names(p))])),
-            mcsamples = mc[rev(names(mc))]
-        )
-      } else if (ci) {
-        res <- round(c(sapply(rev(names(p)), function(n) {
-          c(p[[n]], quantile(mc[[n]], c(0.025, 0.975)))
-        })))
-        names(res) <- paste0(rep(rev(names(p)),each=3), c("",".lo",".hi"))
+  if (!ci || length(selIndices)<=3) progress <- FALSE
+  if (progress) {
+    i=0
+    pb <- tcltk::tkProgressBar("FluMoDL",
+                               sprintf("Calculating for %s selections...", length(selIndices)),
+                               min=0, max=length(selIndices), initial=0)
+  }
+  res <- lapply(selIndices, function(s) {
+    if (progress) { i <<- i+1; tcltk::setTkProgressBar(pb, i) }
+    p <- list()
+    mc <- list()
+    if ("temp" %in% par) {
+      # First determine the required temperature range
+      if (length(temprange)==1 && temprange=="cold") {
+        tRange <- c(floor(min(m$data$temp)), m$MMP)
+      } else if (length(temprange)==1 && temprange=="heat") {
+        tRange <- c(m$MMP, ceiling(max(m$data$temp)))
+      } else if (length(temprange)==1 && temprange=="all") {
+        tRange <- c(floor(min(m$data$temp)), ceiling(max(m$data$temp)))
+      } else if (length(temprange)==2 && is.vector(temprange) && !is.list(temprange)) {
+        if (!is.na(match("MMP", temprange))) temprange[temprange=="MMP"] <- m$MMP
+        tRange <- as.numeric(temprange)
+        if (sum(is.na(tRange))>0) stop("Invalid value provided for argument `temprange`.")
       } else {
-        res <- round(unlist(p[rev(names(p))]))
+        tRange <- c(floor(min(m$data$temp)), ceiling(max(m$data$temp)))
       }
-      res
-    })
-    if (exists("pb")) close(pb)
+      basis.temp <- m$basis$temp
+      p$Temp <- attrdl(m$data$temp, basis.temp, m$data$deaths, m$model, cen=m$MMP, type="an",
+                       sub=s, range=tRange)
+      if (ci || mcsamples) mc$Temp <- attrdl(m$data$temp, basis.temp, m$data$deaths, m$model,
+                                             cen=m$MMP, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim, range=tRange)
+    }
+    if ("RSV" %in% par) {
+      basis.proxyRSV <- m$basis$proxyRSV
+      p$RSV <- attrdl(m$data$proxyRSV, basis.proxyRSV, m$data$deaths, m$model, cen=0, type="an",
+                      sub=s)
+      if (ci || mcsamples) mc$RSV <- attrdl(m$data$proxyRSV, basis.proxyRSV, m$data$deaths, m$model,
+                                            cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
+    }
+    if ("B" %in% par) {
+      basis.proxyB <- m$basis$proxyB
+      p$FluB <- attrdl(m$data$proxyB, basis.proxyB, m$data$deaths, m$model, cen=0, type="an",
+                       sub=s)
+      if (ci || mcsamples) mc$FluB <- attrdl(m$data$proxyB, basis.proxyB, m$data$deaths, m$model,
+                                             cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
+    }
+    if ("H3" %in% par) {
+      basis.proxyH3 <- m$basis$proxyH3
+      p$FluH3 <- attrdl(m$data$proxyH3, basis.proxyH3, m$data$deaths, m$model, cen=0, type="an",
+                        sub=s)
+      if (ci || mcsamples) mc$FluH3 <- attrdl(m$data$proxyH3, basis.proxyH3, m$data$deaths, m$model,
+                                              cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
+    }
+    if ("H1" %in% par) {
+      basis.proxyH1 <- m$basis$proxyH1
+      p$FluH1 <- attrdl(m$data$proxyH1, basis.proxyH1, m$data$deaths, m$model, cen=0, type="an",
+                        sub=s)
+      if (ci || mcsamples) mc$FluH1 <- attrdl(m$data$proxyH1, basis.proxyH1, m$data$deaths, m$model,
+                                              cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
+    }
+    if (sum(is.na(match(c("FluH1","FluH3","FluB"), names(p))))==0) {
+      p$AllFlu <- with(p, FluH1+FluH3+FluB)
+      if (ci || mcsamples) mc$AllFlu <- with(mc, FluH1+FluH3+FluB)
+    }
     if (mcsamples) {
       res <- list(
-        result = as.data.frame.matrix(do.call("rbind", lapply(res, function(x) x$result))),
-        mcsamples = lapply(res, function(x) x$mcsamples)
+        result = round(unlist(p[rev(names(p))])),
+        mcsamples = mc[rev(names(mc))]
       )
-      rownames(res$result) <- selNames
-      names(res$mcsamples) <- selNames
+    } else if (ci) {
+      res <- round(c(sapply(rev(names(p)), function(n) {
+        c(p[[n]], quantile(mc[[n]], c(0.025, 0.975)))
+      })))
+      names(res) <- paste0(rep(rev(names(p)),each=3), c("",".lo",".hi"))
     } else {
-      res <- as.data.frame.matrix(do.call("rbind", res))
-      rownames(res) <- selNames
+      res <- round(unlist(p[rev(names(p))]))
     }
     res
+  })
+  if (exists("pb")) close(pb)
+  if (mcsamples) {
+    res <- list(
+      result = as.data.frame.matrix(do.call("rbind", lapply(res, function(x) x$result))),
+      mcsamples = lapply(res, function(x) x$mcsamples)
+    )
+    rownames(res$result) <- selNames
+    names(res$mcsamples) <- selNames
+  } else {
+    res <- as.data.frame.matrix(do.call("rbind", res))
+    rownames(res) <- selNames
+  }
+  res
 }
 
