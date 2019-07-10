@@ -7,7 +7,7 @@
 #'
 #' Objects of class 'FluMoDL' contain the model, the associated data, estimates of the predicted
 #' associations and other information.
-#' These objects can be further used as input for function [attrMort()], to calculate
+#' These objects can be further used as input for function \code{\link{attrMort}}, to calculate
 #' influenza-attributable and temperature-attributable mortalities for any period in the data
 #' (and any temperature range).
 #'
@@ -30,13 +30,13 @@
 #' @details FluMoDL uses a DLNM with the \emph{daily} number of deaths as the outcome. Covariates
 #'   include the following:
 #'   \itemize{
-#'     \item A [cross-basis matrix][dlnm::crossbasis()] for temperature. The exposure-response
+#'     \item A \code{\link[dlnm:crossbasis]{cross-basis matrix}} for temperature. The exposure-response
 #'     relationship is modelled with a quadratic B-spline with internal knots placed at the
 #'     10th, 75th and 90th percentile of the temperatures distribution. The lag-response
 #'     relationship is modelled with a natural cubic spline with three internal knots
 #'     equidistant in the log scale.
 #'
-#'     \item Three [cross-basis matrices][dlnm::crossbasis()] for influenza activity proxies for
+#'     \item Three \code{\link[dlnm:crossbasis]{cross-basis matrices}} for influenza activity proxies for
 #'     each type/subtype: A(H1N1)pdm09, A(H3N2) and B. These normally are equal to a
 #'     sentinel Influenza-Like Illness (ILI) rate, times the laboratory swab samples Percentage
 #'     Positive (%%) for each type. The exposure-response relationship is specified as linear,
@@ -48,10 +48,10 @@
 #'
 #'     \item A linear trend, and a factor variable for day of the week.
 #'
-#'     \item \emph{Optionally}, a [cross-basis matrix][dlnm::crossbasis()] for an RSV
+#'     \item \emph{Optionally}, a \code{\link[dlnm:crossbasis]{cross-basis matrix}} for an RSV
 #'     activity proxy, with specification identical to those for influenza. If given,
 #'     it will be included in the model and output, and it will be possible to calculate
-#'     mortality attributable to RSV with [attrMort()]. This is an experimental feature;
+#'     mortality attributable to RSV with \code{\link{attrMort}}. This is an experimental feature;
 #'     it might be removed in the future.
 #'   }
 #'
@@ -70,7 +70,7 @@
 #'
 #'     \item{$basis}{A list with names 'temp', 'proxyH1', 'proxyH3' and 'proxyB' (and proxyRSV,
 #'     if provided in the function arguments), containing the
-#'     cross-basis matrices that are used as exposures in the model. See [dlnm::crossbasis()]}
+#'     cross-basis matrices that are used as exposures in the model. See \code{\link[dlnm]{crossbasis}}.}
 #'
 #'     \item{$MMP}{The Minimum Mortality Point, i.e. the temperature where mortality is lowest.}
 #'
@@ -78,7 +78,7 @@
 #'     if provided in the function arguments), containing
 #'     predictions (in the form of \code{crosspred} objects) for each exposure. These can be
 #'     plotted in both the exposure-response and lag-response dimensions, see
-#'     [dlnm::crosspred()], [dlnm::plot.crosspred()] and the examples below.}
+#'     \code{\link[dlnm]{crosspred}}, \code{\link[dlnm]{plot.crosspred}} and the examples below.}
 #'   }
 #'
 #' @references \itemize{
