@@ -32,7 +32,14 @@ Then to install FluMoDL, open R and give:
 
       devtools::install_git("https://github.com/thlytras/FluMoDL.git")
 
-Check back often for new updates of the package!
+Check back here often for new updates of the package!
+
+**Usage**
+
+See package documentation. One uses the function `fitFluMoDL()` to fit the model on the available
+surveillance data, then gives the fitted model object to `attrMort()` to calculate attributable 
+mortalities (to influenza, temperature and -optionally- RSV). Check the help pages of these two
+functions for details. In order to try these out, the package also includes some example surveillance data from Greece (see `?greece`).
 
 **References**
 
