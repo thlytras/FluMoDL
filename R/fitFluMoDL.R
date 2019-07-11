@@ -9,7 +9,9 @@
 #' associations and other information.
 #' These objects can be further used as input for function \code{\link{attrMort}}, to calculate
 #' influenza-attributable and temperature-attributable mortalities for any period in the data
-#' (and any temperature range).
+#' (and any temperature range). Methods \code{print()}, \code{coef()} and \code{vcov()} have
+#' been defined for objects of class 'FluMoDL' (see below),
+#' and also \code{\link[summary.FluMoDL]{summary()}}.
 #'
 #' @param deaths A vector of \emph{daily} deaths, of equal length to argument \code{`dates`}
 #' @param temp A vector of \emph{daily} mean temperatures, of equal length to argument \code{`dates`}
@@ -55,7 +57,6 @@
 #'     it might be removed in the future.
 #'   }
 #'
-#'
 #' @return An object of class 'FluMoDL'. This is a list containing the following elements:
 #'   \describe{
 #'     \item{$data}{A \code{data.frame} with the data used to fit the model. Rows correspond to
@@ -74,12 +75,18 @@
 #'
 #'     \item{$MMP}{The Minimum Mortality Point, i.e. the temperature where mortality is lowest.}
 #'
-#'     \item{$pred}{A list with names 'temp', 'proxyH1', 'proxyH3' and 'proxyB' (and proxyRSV
+#'     \item{$pred}{A list with names 'temp', 'proxyH1', 'proxyH3' and 'proxyB' (and 'proxyRSV'
 #'     if provided in the function arguments), containing
-#'     predictions (in the form of \code{crosspred} objects) for each exposure. These can be
-#'     plotted in both the exposure-response and lag-response dimensions, see
+#'     predictions (in the form of \code{\link[dlnm]{crosspred}} objects) for each exposure.
+#'     These can be plotted in both the exposure-response and lag-response dimensions, see
 #'     \code{\link[dlnm]{crosspred}}, \code{\link[dlnm]{plot.crosspred}} and the examples below.}
 #'   }
+#'
+#' Objects of class 'FluMoDL' have methods \code{print()}, \code{coef()} and \code{vcov()}.
+#' \code{coef()} returns a list of numeric vectors, with names 'proxyH1', 'proxyH3'
+#' and 'proxyB' (and 'proxyRSV' if provided in the function arguments), containing the model
+#' coefficients for these cross-basis terms. Similarly \code{vcov()} returns a list
+#' of variance-covariance matrices for the same terms.
 #'
 #' @references \itemize{
 #'  \item Lytras T, Pantavou K, Mouratidou E, Tsiodras S. Mortality attributable to seasonal influenza
@@ -92,7 +99,7 @@
 #'
 #'  \item Gasparrini A, et al. Mortality risk attributable to high and low ambient temperature:
 #'   a multicountry observational study.
-#'   href{https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(14)62114-0/fulltext}{Lancet}
+#'   \href{https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(14)62114-0/fulltext}{Lancet}
 #'   2015 Jul 25;386(9991):369–75.
 #' }
 #'
@@ -124,7 +131,6 @@
 #' tail(m$data)
 #'
 #' @export
-
 fitFluMoDL <- function(deaths, temp, dates, proxyH1, proxyH3, proxyB, yearweek,
                            proxyRSV=NULL, smooth=TRUE) {
 
@@ -259,8 +265,6 @@ fitFluMoDL <- function(deaths, temp, dates, proxyH1, proxyH3, proxyB, yearweek,
 
 
 
-
-#' @method print FluMoDL
 #' @export
 print.FluMoDL <- function(m) {
   cat("\n** FluMoDL model object **\n\n")
@@ -290,3 +294,46 @@ print.FluMoDL <- function(m) {
   }
 
 }
+
+
+
+#' @export
+coef.FluMoDL <- function(m) {
+  if (!("FluMoDL" %in% class(m))) stop("Argument `m` should be of class 'FluMoDL'.")
+  if (!is.null(m$pred)) {
+    return(lapply(m$pred[names(m$pred)[grep("proxy", names(m$pred))]], coef))
+  } else if (!is.null(m$model)) {
+    n <- c("proxyH1", "proxyH3", "proxyB", "proxyRSV")
+    n <- n[sapply(n, function(x) length(grep(x, names(coef(m$model))))>0)]
+    res <- lapply(n, function(nn) {
+      nnn <- grep(nn, names(coef(m$model)))
+      coef(m$model)[nnn]
+    })
+    names(res) <- n
+    return(res)
+  } else {
+    stop("No elements `pred` or `model` found in this object; object is malformed.")
+  }
+}
+
+
+
+#' @export
+vcov.FluMoDL <- function(m) {
+  if (!("FluMoDL" %in% class(m))) stop("Argument `m` should be of class 'FluMoDL'.")
+  if (!is.null(m$pred)) {
+    return(lapply(m$pred[names(m$pred)[grep("proxy", names(m$pred))]], vcov))
+  } else if (!is.null(m$model)) {
+    n <- c("proxyH1", "proxyH3", "proxyB", "proxyRSV")
+    n <- n[sapply(n, function(x) length(grep(x, names(coef(m$model))))>0)]
+    res <- lapply(n, function(nn) {
+      nnn <- grep(nn, names(coef(m$model)))
+      vcov(m$model)[nnn,nnn]
+    })
+    names(res) <- n
+    return(res)
+  } else {
+    stop("No elements `pred` or `model` found in this object; object is malformed.")
+  }
+}
+
