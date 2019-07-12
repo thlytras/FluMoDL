@@ -30,7 +30,7 @@ length to argument \code{`yearweek`}. (This is an experimental feature, and this
 might be removed in the future.)}
 
 \item{smooth}{\code{TRUE} (the default) if smoothing is to be applied to the influenza
-activity proxies when converting them to a daily series.}
+incidence proxies when converting them to a daily series.}
 }
 \value{
 An object of class 'FluMoDL'. This is a list containing the following elements:
@@ -67,7 +67,7 @@ of variance-covariance matrices for the same terms.
 \description{
 This function fits a FluMoDL object. This is a distributed lag nonlinear model (DLNM), of
 quasipoisson family and with log link, which estimates the association between mortality
-(as outcome) and daily mean temperatures and type-specific influenza activity proxies
+(as outcome) and daily mean temperatures and type-specific influenza incidence proxies
 (as exposures), adjusted for covariates.
 }
 \details{
@@ -88,7 +88,7 @@ FluMoDL uses a DLNM with the \emph{daily} number of deaths as the outcome. Covar
     relationship is modelled with a natural cubic spline with three internal knots
     equidistant in the log scale.
 
-    \item Three \code{\link[dlnm:crossbasis]{cross-basis matrices}} for influenza activity proxies for
+    \item Three \code{\link[dlnm:crossbasis]{cross-basis matrices}} for influenza incidence proxies for
     each type/subtype: A(H1N1)pdm09, A(H3N2) and B. These normally are equal to a
     sentinel Influenza-Like Illness (ILI) rate, times the laboratory swab samples Percentage
     Positive (%%) for each type. The exposure-response relationship is specified as linear,
@@ -101,7 +101,7 @@ FluMoDL uses a DLNM with the \emph{daily} number of deaths as the outcome. Covar
     \item A linear trend, and a factor variable for day of the week.
 
     \item \emph{Optionally}, a \code{\link[dlnm:crossbasis]{cross-basis matrix}} for an RSV
-    activity proxy, with specification identical to those for influenza. If given,
+    incidence proxy, with specification identical to those for influenza. If given,
     it will be included in the model and output, and it will be possible to calculate
     mortality attributable to RSV with \code{\link{attrMort}}. This is an experimental feature;
     it might be removed in the future.

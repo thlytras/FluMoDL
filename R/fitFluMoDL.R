@@ -2,7 +2,7 @@
 #'
 #' This function fits a FluMoDL object. This is a distributed lag nonlinear model (DLNM), of
 #' quasipoisson family and with log link, which estimates the association between mortality
-#' (as outcome) and daily mean temperatures and type-specific influenza activity proxies
+#' (as outcome) and daily mean temperatures and type-specific influenza incidence proxies
 #' (as exposures), adjusted for covariates.
 #'
 #' Objects of class 'FluMoDL' contain the model, the associated data, estimates of the predicted
@@ -27,7 +27,7 @@
 #'   length to argument \code{`yearweek`}. (This is an experimental feature, and this argument
 #'   might be removed in the future.)
 #' @param smooth \code{TRUE} (the default) if smoothing is to be applied to the influenza
-#'   activity proxies when converting them to a daily series.
+#'   incidence proxies when converting them to a daily series.
 #'
 #' @details FluMoDL uses a DLNM with the \emph{daily} number of deaths as the outcome. Covariates
 #'   include the following:
@@ -38,7 +38,7 @@
 #'     relationship is modelled with a natural cubic spline with three internal knots
 #'     equidistant in the log scale.
 #'
-#'     \item Three \code{\link[dlnm:crossbasis]{cross-basis matrices}} for influenza activity proxies for
+#'     \item Three \code{\link[dlnm:crossbasis]{cross-basis matrices}} for influenza incidence proxies for
 #'     each type/subtype: A(H1N1)pdm09, A(H3N2) and B. These normally are equal to a
 #'     sentinel Influenza-Like Illness (ILI) rate, times the laboratory swab samples Percentage
 #'     Positive (%%) for each type. The exposure-response relationship is specified as linear,
@@ -51,7 +51,7 @@
 #'     \item A linear trend, and a factor variable for day of the week.
 #'
 #'     \item \emph{Optionally}, a \code{\link[dlnm:crossbasis]{cross-basis matrix}} for an RSV
-#'     activity proxy, with specification identical to those for influenza. If given,
+#'     incidence proxy, with specification identical to those for influenza. If given,
 #'     it will be included in the model and output, and it will be possible to calculate
 #'     mortality attributable to RSV with \code{\link{attrMort}}. This is an experimental feature;
 #'     it might be removed in the future.
@@ -259,7 +259,7 @@ fitFluMoDL <- function(deaths, temp, dates, proxyH1, proxyH3, proxyB, yearweek,
     res$basis$proxyRSV <- basis.proxyRSV
     res$pred$proxyRSV <- predProxyRSV
   }
-  class(res) <- c("FluMoDL", "list")
+  class(res) <- c("FluMoDL")
   return(res)
 }
 
@@ -273,7 +273,7 @@ print.FluMoDL <- function(m) {
   cat(sprintf("%s total deaths in the data\n", sum(m$data$deaths)))
   cat(sprintf("Minimum mortality point (temperature): %s\n", m$MMP))
   mid <- ceiling(length(m$pred$proxyH1$allfit)/2)
-  cat(sprintf("Relative Risk for an indicative influenza activity proxy of %s: (95%% CI)\n",
+  cat(sprintf("Relative Risk for an indicative influenza incidence proxy of %s: (95%% CI)\n",
               names(m$pred$proxyH1$allfit)[mid]))
   cat(sprintf("Influenza A(H1N1)pdm09 = %.3f (%.3f - %.3f)\n",
               exp(m$pred$proxyH1$allfit[mid]),
@@ -286,20 +286,19 @@ print.FluMoDL <- function(m) {
               m$pred$proxyB$allRRlow[mid], m$pred$proxyB$allRRhigh[mid]))
   if (!is.null(m$pred$proxyRSV)) {
     cat("Model contains a cross-basis term for RSV (Respiratory Syncytial Virus)\n")
-    cat(sprintf("RR for an indicative RSV activity proxy of %s = %.3f (%.3f - %.3f)\n",
+    cat(sprintf("RR for an indicative RSV incidence proxy of %s = %.3f (%.3f - %.3f)\n",
                 names(m$pred$proxyRSV$allfit)[mid],
                 exp(m$pred$proxyRSV$allfit[mid]),
                 m$pred$proxyRSV$allRRlow[mid],
                 m$pred$proxyRSV$allRRhigh[mid]))
   }
-
 }
 
 
 
 #' @export
 coef.FluMoDL <- function(m) {
-  if (!("FluMoDL" %in% class(m))) stop("Argument `m` should be of class 'FluMoDL'.")
+  if (!inherits(m, "FluMoDL")) stop("Argument `m` should be of class 'FluMoDL'.")
   if (!is.null(m$pred)) {
     return(lapply(m$pred[names(m$pred)[grep("proxy", names(m$pred))]], coef))
   } else if (!is.null(m$model)) {
@@ -320,7 +319,7 @@ coef.FluMoDL <- function(m) {
 
 #' @export
 vcov.FluMoDL <- function(m) {
-  if (!("FluMoDL" %in% class(m))) stop("Argument `m` should be of class 'FluMoDL'.")
+  if (!inherits(m, "FluMoDL")) stop("Argument `m` should be of class 'FluMoDL'.")
   if (!is.null(m$pred)) {
     return(lapply(m$pred[names(m$pred)[grep("proxy", names(m$pred))]], vcov))
   } else if (!is.null(m$model)) {
@@ -335,5 +334,17 @@ vcov.FluMoDL <- function(m) {
   } else {
     stop("No elements `pred` or `model` found in this object; object is malformed.")
   }
+}
+
+
+
+#' @export
+`[[<-.FluMoDL` <- function(m, i) {
+  return(m)
+}
+
+#' @export
+`[<-.FluMoDL` <- function(m, i) {
+  return(m)
 }
 

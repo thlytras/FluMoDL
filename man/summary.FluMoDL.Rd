@@ -12,6 +12,11 @@
 \value{
 An object of class 'summary.FluMoDL'. This is a list containing the following elements:
   \describe{
+    \item{$type}{A string describing the meaning of the coefficients. Defaults to
+    "summary", meaning a first-stage model summary. Alternatively, "BLUP" means
+    Best Unbiased Linear Predictor coefficients, and "pooled" refers to coefficients
+    pooled in the course of a multivariate meta-analysis. See ...}
+
     \item{$coef}{A list of numeric vectors, with names 'proxyH1', 'proxyH3' and 'proxyB'
     (and 'proxyRSV' if provided in the function arguments), containing the model
     coefficients for these terms.}
@@ -20,9 +25,7 @@ An object of class 'summary.FluMoDL'. This is a list containing the following el
     and 'proxyB' (and 'proxyRSV' if provided in the function arguments), for the respective
     model coefficients.}
 
-    \item{$MMP}{The Minimum Mortality Point, i.e. the temperature where mortality is lowest.}
-
-    \item{$pred}{A list with names 'temp', 'proxyH1', 'proxyH3' and 'proxyB' (and 'proxyRSV'
+    \item{$pred}{A list with names 'proxyH1', 'proxyH3' and 'proxyB' (and 'proxyRSV'
     if provided in the function arguments), containing
     predictions (in the form of \code{\link[dlnm]{crosspred}} objects) for each exposure.
     These can be plotted in both the exposure-response and lag-response dimensions, see
@@ -30,11 +33,14 @@ An object of class 'summary.FluMoDL'. This is a list containing the following el
   }
 }
 \description{
-This function creates a summarized version of a 'FluMoDL' object. It contains the predictions,
-as well as the sets of coefficients and variance-covariance matrices for the activity
-proxy terms (for influenza, and for RSV if provided). These summaries can be used to run a
-multivariate meta-analysis and calculate pooled effect estimates and BLUP (Best Unbiased
-Linear Predictor) estimates for influenza (and RSV if provided).
+This function creates a summarized version of a 'FluMoDL' object. It contains
+the sets of coefficients and variance-covariance matrices for the incidence
+proxy terms (for influenza, and for RSV if provided), and the predictions for these terms.
+}
+\details{
+These summaries can be used to run a multivariate meta-analysis and calculate
+pooled effect estimates and BLUP (Best Unbiased Linear Predictor) estimates
+for influenza (and RSV if provided).
 }
 \examples{
 data(greece) # Use example surveillance data from Greece
