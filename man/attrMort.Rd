@@ -2,7 +2,7 @@
 % Please edit documentation in R/attrMort.R
 \name{attrMort}
 \alias{attrMort}
-\title{Influenza- and temperature-attributable mortality for a FluMoDL object  (experimental version with RSV term)}
+\title{Influenza- and temperature-attributable mortality for a FluMoDL object}
 \usage{
 attrMort(m, par = c("H1", "H3", "B", "temp", "RSV"), sel = "week",
   from = NULL, to = NULL, temprange = "cold", ci = TRUE,

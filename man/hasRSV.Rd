@@ -27,5 +27,6 @@ m <- with(greece, fitFluMoDL(deaths = daily$deaths,
     proxyB = weekly$ILI * weekly$ppB,
     yearweek = weekly$yearweek))
 hasRSV(m)   # Returns FALSE
+hasRSV(summary(m))   # Also returns FALSE
 
 }

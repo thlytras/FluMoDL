@@ -18,6 +18,7 @@
 #'     proxyB = weekly$ILI * weekly$ppB,
 #'     yearweek = weekly$yearweek))
 #' hasRSV(m)   # Returns FALSE
+#' hasRSV(summary(m))   # Also returns FALSE
 #'
 #' @export
 hasRSV <- function(x) {
@@ -34,5 +35,11 @@ hasRSV.FluMoDL <- function(m) {
 #' @export
 hasRSV.summary.FluMoDL <- function(s) {
   return(!is.null(s$coef$proxyRSV))
+}
+
+
+#' @export
+hasRSV.metaFluMoDL <- function(m) {
+  return(!is.null(m$proxyRSV))
 }
 

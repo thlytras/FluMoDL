@@ -13,9 +13,12 @@
 An object of class 'summary.FluMoDL'. This is a list containing the following elements:
   \describe{
     \item{$type}{A string describing the meaning of the coefficients. Defaults to
-    "summary", meaning a first-stage model summary. Alternatively, "BLUP" means
-    Best Unbiased Linear Predictor coefficients, and "pooled" refers to coefficients
-    pooled in the course of a multivariate meta-analysis. See ...}
+    "summary", meaning a first-stage model summary. Alternatively, "blup" means
+    Best Unbiased Linear Predictor (BLUP) coefficients, and "pooled" refers to coefficients
+    pooled in the course of a multivariate meta-analysis. See \code{\link{metaFluMoDL}}.}
+
+    \item{$description}{A string with an additional description. For objects created
+    with \code{summary.FluMoDL()} it is an empty string, but see \code{\link{metaFluMoDL}}.}
 
     \item{$coef}{A list of numeric vectors, with names 'proxyH1', 'proxyH3' and 'proxyB'
     (and 'proxyRSV' if provided in the function arguments), containing the model
@@ -38,7 +41,7 @@ the sets of coefficients and variance-covariance matrices for the incidence
 proxy terms (for influenza, and for RSV if provided), and the predictions for these terms.
 }
 \details{
-These summaries can be used to run a multivariate meta-analysis and calculate
+These summaries can be used to run a \code{\link[=metaFluMoDL]{multivariate meta-analysis}} and calculate
 pooled effect estimates and BLUP (Best Unbiased Linear Predictor) estimates
 for influenza (and RSV if provided).
 }

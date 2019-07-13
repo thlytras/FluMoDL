@@ -1,4 +1,4 @@
-#' Influenza- and temperature-attributable mortality for a FluMoDL object  (experimental version with RSV term)
+#' Influenza- and temperature-attributable mortality for a FluMoDL object
 #'
 #' This function uses an object of class \code{FluMoDL} to calculate mortality
 #' attributed to influenza and/or temperature.

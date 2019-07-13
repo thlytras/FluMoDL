@@ -5,7 +5,7 @@ Title: Influenza-attributable mortality with distributed-lag models
 Version: 0.0.1
 Author: Theodore Lytras
 Maintainer: Theodore Lytras <thlytras@gmail.com>
-Depends: dlnm
+Depends: dlnm, mvmeta
 Description: This package uses distributed-lag nonlinear models to estimate
     the mortality attributed to influenza and temperature. 
 License: GPL (>=2)
