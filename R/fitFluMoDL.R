@@ -80,6 +80,11 @@
 #'     predictions (in the form of \code{\link[dlnm]{crosspred}} objects) for each exposure.
 #'     These can be plotted in both the exposure-response and lag-response dimensions, see
 #'     \code{\link[dlnm]{crosspred}}, \code{\link[dlnm]{plot.crosspred}} and the examples below.}
+#'
+#'     \item{$blup}{This element is NULL when creating the object, but can receive a
+#'     \code{\link{summary.FluMoDL}} object that contains Best Linear Unbiased Predictor
+#'     (BLUP) coefficients, to be used when estimating attributable mortality. Can be
+#'     retrieved or set with the \code{\link{blup.FluMoDL}} method}
 #'   }
 #'
 #' Objects of class 'FluMoDL' have methods \code{print()}, \code{coef()} and \code{vcov()}.
@@ -253,7 +258,8 @@ fitFluMoDL <- function(deaths, temp, dates, proxyH1, proxyH3, proxyB, yearweek,
                  proxyH3 = basis.proxyH3, proxyB = basis.proxyB),
     MMP = MMP,
     pred = list(temp = predTemp, proxyH1 = predProxyH1,
-                proxyH3 = predProxyH3, proxyB = predProxyB)
+                proxyH3 = predProxyH3, proxyB = predProxyB),
+    blup = NULL
   )
   if (!is.null(proxyRSV)) {
     res$basis$proxyRSV <- basis.proxyRSV
@@ -337,6 +343,8 @@ vcov.FluMoDL <- function(m) {
 }
 
 
+
+# Override [[ and [ operators to avoid messing up FluMoDL objects
 
 #' @export
 `[[<-.FluMoDL` <- function(m, i) {

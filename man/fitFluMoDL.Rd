@@ -56,6 +56,11 @@ An object of class 'FluMoDL'. This is a list containing the following elements:
     predictions (in the form of \code{\link[dlnm]{crosspred}} objects) for each exposure.
     These can be plotted in both the exposure-response and lag-response dimensions, see
     \code{\link[dlnm]{crosspred}}, \code{\link[dlnm]{plot.crosspred}} and the examples below.}
+
+    \item{$blup}{This element is NULL when creating the object, but can receive a
+    \code{\link{summary.FluMoDL}} object that contains Best Linear Unbiased Predictor
+    (BLUP) coefficients, to be used when estimating attributable mortality. Can be
+    retrieved or set with the \code{\link{blup.FluMoDL}} method}
   }
 
 Objects of class 'FluMoDL' have methods \code{print()}, \code{coef()} and \code{vcov()}.
