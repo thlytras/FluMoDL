@@ -3,7 +3,10 @@
 #' This retrieves or sets the BLUP coefficients for a particular
 #' \link[=fitFluMoDL]{FluMoDL} object.
 #'
-#' @param m An object of class \code{\link[=fitFluMoDL]{FluMoDL}}
+#' @param object An object of class \code{\link[=fitFluMoDL]{FluMoDL}}
+#' @param value An object of class \code{\link{summary.FluMoDL}}, holding BLUP estimates
+#'   to be assigned to \code{x}
+#' @param ... Further arguments passed to or from other methods.
 #'
 #' @return For \code{blup.FluMoDL}, the returned object of class
 #'   \code{\link{summary.FluMoDL}} holding the BLUP coefficients associated
@@ -12,26 +15,27 @@
 #' @importFrom mvmeta blup
 #'
 #' @export
-blup.FluMoDL <- function(m) {
-  return(m$blup)
+blup.FluMoDL <- function(object, ...) {
+  return(object$blup)
 }
 
 
+#' @rdname blup.FluMoDL
 #' @export
-`blup<-` <- function(m, value) {
+`blup<-` <- function(object, value) {
   UseMethod("blup<-")
 }
 
 
 #' @rdname blup.FluMoDL
 #' @export
-`blup<-.FluMoDL` <- function(m, value) {
-  if (!inherits(value, "summary.FluMoDL")) stop("argument should be of class 'summary.FluMoDL'")
-  if (!hasRSV(m) && hasRSV(value)) {
+`blup<-.FluMoDL` <- function(object, value) {
+  if (!inherits(value, "summary.FluMoDL")) stop("'value' should be of class 'summary.FluMoDL'")
+  if (!hasRSV(object) && hasRSV(value)) {
     value$coef$proxyRSV <- NULL
     value$vcov$proxyRSV <- NULL
   }
-  m$blup <- addPredictions(value, m)
-  return(m)
+  object$blup <- addPredictions(value, object)
+  return(object)
 }
 

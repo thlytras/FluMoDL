@@ -82,7 +82,7 @@ These objects can be further used as input for function \code{\link{attrMort}}, 
 influenza-attributable and temperature-attributable mortalities for any period in the data
 (and any temperature range). Methods \code{print()}, \code{coef()} and \code{vcov()} have
 been defined for objects of class 'FluMoDL' (see below),
-and also \code{\link[summary.FluMoDL]{summary()}}.
+and also \code{\link[=summary.FluMoDL]{summary()}}.
 
 FluMoDL uses a DLNM with the \emph{daily} number of deaths as the outcome. Covariates
   include the following:
@@ -123,7 +123,7 @@ m <- with(greece, fitFluMoDL(deaths = daily$deaths,
 m
 
 # Plot the association between A(H1N1)pdm09 activity and mortality
-    and the overall temperature-mortality association:
+#   and the overall temperature-mortality association:
 plot(m$pred$proxyH1, "overall")
 plot(m$pred$temp, "overall")
 
@@ -131,7 +131,7 @@ plot(m$pred$temp, "overall")
 abline(v=m$MMP)
 
 # Check the lag-response dimension for the A(H1N1)pdm09 - mortality
-    association, for all proxy values, and for an indicative value of 30.
+#   association, for all proxy values, and for an indicative value of 30.
 plot(m$pred$proxyH1) # Produces a 3D plot, see ?plot.crosspred
 plot(m$pred$proxyH1, var=30)
 

@@ -107,19 +107,19 @@
 #' attr1
 #'
 #' # Calculate influenza-attributable estimates by week, only point
-#'     estimates, for the 2014-15 season:
+#' #    estimates, for the 2014-15 season:
 #' attr2 <- attrMort(m, par=c("H1","H3","B"), sel="week",
 #'     from=201440, to=201520, ci=FALSE)
 #' attr2
 #'
 #' # Calculate mortality attributable to temperatures below 5 celsius, for
-#'     the period of January 2017:
+#' #    the period of January 2017:
 #' attr3 <- attrMort(m, par="temp",
 #'     sel=with(m$data, which(dates>="2017-1-1" & dates<="2017-1-31")),
-#'     temprange=(5,-20))
+#'     temprange=c(5,-20))
 #'
 #' # Calculate attributable mortalities for the entire 2017-18 season, and
-#'     return the Monte Carlo simulation samples in the output
+#' #    return the Monte Carlo simulation samples in the output
 #' attr4 <- attrMort(m, sel="season", from=2017, to=2017, mcsamples=TRUE)
 #'
 #' @export
@@ -155,7 +155,7 @@ attrMort <- function(m, par=c("H1","H3","B","temp","RSV"), sel="week", from=NULL
 
   } else if (is.matrix(sel)) {
     if (!is.logical(sel) || nrow(sel)!=nrow(m$data)) stop("If argument `sel` is a matrix, it should be a logical matrix with number of rows equal to the number of rows in `m$data`.")
-    selIndices <- name(as.list(as.data.frame(sel)))
+    selIndices <- names(as.list(as.data.frame(sel)))
     selNames <- colnames(sel)
 
   } else if (class(sel)=="list") {

@@ -11,7 +11,7 @@
 #' influenza-attributable and temperature-attributable mortalities for any period in the data
 #' (and any temperature range). Methods \code{print()}, \code{coef()} and \code{vcov()} have
 #' been defined for objects of class 'FluMoDL' (see below),
-#' and also \code{\link[summary.FluMoDL]{summary()}}.
+#' and also \code{\link[=summary.FluMoDL]{summary()}}.
 #'
 #' @param deaths A vector of \emph{daily} deaths, of equal length to argument \code{`dates`}
 #' @param temp A vector of \emph{daily} mean temperatures, of equal length to argument \code{`dates`}
@@ -108,6 +108,8 @@
 #'   2015 Jul 25;386(9991):369–75.
 #' }
 #'
+#' @import stats
+#'
 #' @examples
 #' data(greece) # Use example surveillance data from Greece
 #' m <- with(greece, fitFluMoDL(deaths = daily$deaths,
@@ -119,7 +121,7 @@
 #' m
 #'
 #' # Plot the association between A(H1N1)pdm09 activity and mortality
-#'     and the overall temperature-mortality association:
+#' #   and the overall temperature-mortality association:
 #' plot(m$pred$proxyH1, "overall")
 #' plot(m$pred$temp, "overall")
 #'
@@ -127,7 +129,7 @@
 #' abline(v=m$MMP)
 #'
 #' # Check the lag-response dimension for the A(H1N1)pdm09 - mortality
-#'     association, for all proxy values, and for an indicative value of 30.
+#' #   association, for all proxy values, and for an indicative value of 30.
 #' plot(m$pred$proxyH1) # Produces a 3D plot, see ?plot.crosspred
 #' plot(m$pred$proxyH1, var=30)
 #'
@@ -272,47 +274,46 @@ fitFluMoDL <- function(deaths, temp, dates, proxyH1, proxyH3, proxyB, yearweek,
 
 
 #' @export
-print.FluMoDL <- function(m) {
+print.FluMoDL <- function(x, ...) {
   cat("\n** FluMoDL model object **\n\n")
   cat(sprintf("From %s to %s (%s rows)\n",
-              min(m$data$dates, na.rm=TRUE), max(m$data$dates, na.rm=TRUE), nrow(m$data)))
-  cat(sprintf("%s total deaths in the data\n", sum(m$data$deaths)))
-  cat(sprintf("Minimum mortality point (temperature): %s\n", m$MMP))
-  mid <- ceiling(length(m$pred$proxyH1$allfit)/2)
+              min(x$data$dates, na.rm=TRUE), max(x$data$dates, na.rm=TRUE), nrow(x$data)))
+  cat(sprintf("%s total deaths in the data\n", sum(x$data$deaths)))
+  cat(sprintf("Minimum mortality point (temperature): %s\n", x$MMP))
+  mid <- ceiling(length(x$pred$proxyH1$allfit)/2)
   cat(sprintf("Relative Risk for an indicative influenza incidence proxy of %s: (95%% CI)\n",
-              names(m$pred$proxyH1$allfit)[mid]))
+              names(x$pred$proxyH1$allfit)[mid]))
   cat(sprintf("Influenza A(H1N1)pdm09 = %.3f (%.3f - %.3f)\n",
-              exp(m$pred$proxyH1$allfit[mid]),
-              m$pred$proxyH1$allRRlow[mid], m$pred$proxyH1$allRRhigh[mid]))
+              exp(x$pred$proxyH1$allfit[mid]),
+              x$pred$proxyH1$allRRlow[mid], x$pred$proxyH1$allRRhigh[mid]))
   cat(sprintf("Influenza A(H3N2)      = %.3f (%.3f - %.3f)\n",
-              exp(m$pred$proxyH3$allfit[mid]),
-              m$pred$proxyH3$allRRlow[mid], m$pred$proxyH3$allRRhigh[mid]))
+              exp(x$pred$proxyH3$allfit[mid]),
+              x$pred$proxyH3$allRRlow[mid], x$pred$proxyH3$allRRhigh[mid]))
   cat(sprintf("Influenza B            = %.3f (%.3f - %.3f)\n",
-              exp(m$pred$proxyB$allfit[mid]),
-              m$pred$proxyB$allRRlow[mid], m$pred$proxyB$allRRhigh[mid]))
-  if (!is.null(m$pred$proxyRSV)) {
+              exp(x$pred$proxyB$allfit[mid]),
+              x$pred$proxyB$allRRlow[mid], x$pred$proxyB$allRRhigh[mid]))
+  if (!is.null(x$pred$proxyRSV)) {
     cat("Model contains a cross-basis term for RSV (Respiratory Syncytial Virus)\n")
     cat(sprintf("RR for an indicative RSV incidence proxy of %s = %.3f (%.3f - %.3f)\n",
-                names(m$pred$proxyRSV$allfit)[mid],
-                exp(m$pred$proxyRSV$allfit[mid]),
-                m$pred$proxyRSV$allRRlow[mid],
-                m$pred$proxyRSV$allRRhigh[mid]))
+                names(x$pred$proxyRSV$allfit)[mid],
+                exp(x$pred$proxyRSV$allfit[mid]),
+                x$pred$proxyRSV$allRRlow[mid],
+                x$pred$proxyRSV$allRRhigh[mid]))
   }
 }
 
 
 
 #' @export
-coef.FluMoDL <- function(m) {
-  if (!inherits(m, "FluMoDL")) stop("Argument `m` should be of class 'FluMoDL'.")
-  if (!is.null(m$pred)) {
-    return(lapply(m$pred[names(m$pred)[grep("proxy", names(m$pred))]], coef))
-  } else if (!is.null(m$model)) {
+coef.FluMoDL <- function(object, ...) {
+  if (!is.null(object$pred)) {
+    return(lapply(object$pred[names(object$pred)[grep("proxy", names(object$pred))]], coef))
+  } else if (!is.null(object$model)) {
     n <- c("proxyH1", "proxyH3", "proxyB", "proxyRSV")
-    n <- n[sapply(n, function(x) length(grep(x, names(coef(m$model))))>0)]
+    n <- n[sapply(n, function(x) length(grep(x, names(coef(object$model))))>0)]
     res <- lapply(n, function(nn) {
-      nnn <- grep(nn, names(coef(m$model)))
-      coef(m$model)[nnn]
+      nnn <- grep(nn, names(coef(object$model)))
+      coef(object$model)[nnn]
     })
     names(res) <- n
     return(res)
@@ -324,16 +325,15 @@ coef.FluMoDL <- function(m) {
 
 
 #' @export
-vcov.FluMoDL <- function(m) {
-  if (!inherits(m, "FluMoDL")) stop("Argument `m` should be of class 'FluMoDL'.")
-  if (!is.null(m$pred)) {
-    return(lapply(m$pred[names(m$pred)[grep("proxy", names(m$pred))]], vcov))
-  } else if (!is.null(m$model)) {
+vcov.FluMoDL <- function(object, ...) {
+  if (!is.null(object$pred)) {
+    return(lapply(object$pred[names(object$pred)[grep("proxy", names(object$pred))]], vcov))
+  } else if (!is.null(object$model)) {
     n <- c("proxyH1", "proxyH3", "proxyB", "proxyRSV")
-    n <- n[sapply(n, function(x) length(grep(x, names(coef(m$model))))>0)]
+    n <- n[sapply(n, function(x) length(grep(x, names(coef(object$model))))>0)]
     res <- lapply(n, function(nn) {
-      nnn <- grep(nn, names(coef(m$model)))
-      vcov(m$model)[nnn,nnn]
+      nnn <- grep(nn, names(coef(object$model)))
+      vcov(object$model)[nnn,nnn]
     })
     names(res) <- n
     return(res)
@@ -347,12 +347,12 @@ vcov.FluMoDL <- function(m) {
 # Override [[ and [ operators to avoid messing up FluMoDL objects
 
 #' @export
-`[[<-.FluMoDL` <- function(m, i) {
-  return(m)
+`[[<-.FluMoDL` <- function(x, value) {
+  return(x)
 }
 
 #' @export
-`[<-.FluMoDL` <- function(m, i) {
-  return(m)
+`[<-.FluMoDL` <- function(x, value) {
+  return(x)
 }
 

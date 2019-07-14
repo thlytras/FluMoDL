@@ -77,6 +77,11 @@
 #' @references \itemize{ \item Gasparrini A, Leone M. Attributable risk from distributed lag models.
 #' \href{https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/1471-2288-14-55}{BMC Med Res Methodol} 2014;14:55.}
 #'
+#' @import dlnm
+#' @importFrom tsModel Lag
+#' @importFrom utils packageVersion
+#' @importFrom utils getFromNamespace
+#'
 #' @examples
 #' # load the package
 #' library(FluMoDL)  # package dlnm is automatically loaded
@@ -112,8 +117,14 @@
 
 attrdl <- function(x,basis,cases,model=NULL,coef=NULL,vcov=NULL,type="af",
   dir="back",tot=TRUE,cen,range=NULL,sim=FALSE,nsim=5000,sub=1:length(cases)) {
-################################################################################
-#
+
+  .getcoef <- getFromNamespace("getcoef", "dlnm")
+  .getvcov <- getFromNamespace("getvcov", "dlnm")
+  .getlink <- getFromNamespace("getlink", "dlnm")
+  .seqlag <- getFromNamespace("seqlag", "dlnm")
+  .mkXpred <- getFromNamespace("mkXpred", "dlnm")
+  
+  
   # CHECK VERSION OF THE DLNM PACKAGE
   if(packageVersion("dlnm")<"2.2.0")
     stop("update dlnm package to version >= 2.2.0")
@@ -137,7 +148,7 @@ attrdl <- function(x,basis,cases,model=NULL,coef=NULL,vcov=NULL,type="af",
   #   - CONSTANT EXPOSURES ALONG LAGS IF dir="forw"
   lag <- attr(basis,"lag")
   if(NCOL(x)==1L) {
-    at <- if(dir=="back") tsModel:::Lag(x,seq(lag[1],lag[2])) else
+    at <- if(dir=="back") tsModel::Lag(x,seq(lag[1],lag[2])) else
       matrix(rep(x,diff(lag)+1),length(x))
   } else {
     if(dir=="forw") stop("'x' must be a vector when dir='forw'")
@@ -159,7 +170,7 @@ attrdl <- function(x,basis,cases,model=NULL,coef=NULL,vcov=NULL,type="af",
   } else {
     den <- sum(cases[sub],na.rm=TRUE)
     if(dir=="forw")
-      cases <- rowMeans(as.matrix(tsModel:::Lag(cases,-seq(lag[1],lag[2]))))
+      cases <- rowMeans(as.matrix(tsModel::Lag(cases,-seq(lag[1],lag[2]))))
   }
 #
 ################################################################################
@@ -169,11 +180,11 @@ attrdl <- function(x,basis,cases,model=NULL,coef=NULL,vcov=NULL,type="af",
     cond <- paste0(name,"[[:print:]]*v[0-9]{1,2}\\.l[0-9]{1,2}")
     if(ncol(basis)==1L) cond <- name
     model.class <- class(model)
-    coef <- dlnm:::getcoef(model,model.class)
+    coef <- .getcoef(model,model.class)
     ind <- grep(cond,names(coef))
     coef <- coef[ind]
-    vcov <- dlnm:::getvcov(model,model.class)[ind,ind,drop=FALSE]
-    model.link <- dlnm:::getlink(model,model.class)
+    vcov <- .getvcov(model,model.class)[ind,ind,drop=FALSE]
+    model.link <- .getlink(model,model.class)
     if(model.link!="log") stop("'model' must have a log link function")
   }
 #
@@ -184,11 +195,11 @@ attrdl <- function(x,basis,cases,model=NULL,coef=NULL,vcov=NULL,type="af",
 #
   # PREPARE THE ARGUMENTS FOR TH BASIS TRANSFORMATION
   predvar <- if(typebasis=="one") x else seq(NROW(at))
-  predlag <- if(typebasis=="one") 0 else dlnm:::seqlag(lag)
+  predlag <- if(typebasis=="one") 0 else .seqlag(lag)
 #
   # CREATE THE MATRIX OF TRANSFORMED CENTRED VARIABLES (DEPENDENT ON typebasis)
   if(typebasis=="cb") {
-    Xpred <- dlnm:::mkXpred(typebasis,basis,at,predvar,predlag,cen)
+    Xpred <- .mkXpred(typebasis,basis,at,predvar,predlag,cen)
     Xpredall <- 0
     for (i in seq(length(predlag))) {
       ind <- seq(length(predvar))+length(predvar)*(i-1)
@@ -196,7 +207,7 @@ attrdl <- function(x,basis,cases,model=NULL,coef=NULL,vcov=NULL,type="af",
     }
   } else {
     basis <- do.call(onebasis,c(list(x=x),attr(basis,"argvar")))
-    Xpredall <- dlnm:::mkXpred(typebasis,basis,x,predvar,predlag,cen)
+    Xpredall <- .mkXpred(typebasis,basis,x,predvar,predlag,cen)
   }
 #
   # CHECK DIMENSIONS

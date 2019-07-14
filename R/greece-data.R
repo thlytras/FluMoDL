@@ -10,8 +10,9 @@
 #' * Three weekly series of laboratory sample percentage positives by influenza
 #' type and subtype: A(H1N1)pdm09, A(H3N2) and B. These can be multiplied with
 #' the respective ILI rates, to create type-specific influenza incidence proxies
-#' (see Goldstein et al. \href{https://journals.plos.org/plosmedicine/
-#' article?id=10.1371/journal.pmed.1001051}{PLoS Med.} 2011;8(7):e1001051)
+#' (see Goldstein et al.
+#' \href{https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.1001051}{PLoS Med.}
+#' 2011;8(7):e1001051)
 #'
 #' @docType data
 #'

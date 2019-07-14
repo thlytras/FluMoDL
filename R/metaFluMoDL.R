@@ -57,6 +57,8 @@
 #'   \href{https://onlinelibrary.wiley.com/doi/full/10.1002/sim.5471}{Stat Med} 2012;31(29):3821–39.
 #' }
 #'
+#' @importFrom mvmeta mvmeta
+#'
 #' @export
 metaFluMoDL <- function(summaries, par=c("H1","H3","B","RSV")) {
   nm <- names(summaries)
@@ -88,50 +90,51 @@ metaFluMoDL <- function(summaries, par=c("H1","H3","B","RSV")) {
 
 
 #' @export
-names.metaFluMoDL <- function(m) {
-  return(rownames(unclass(m)[[1]]$model))
+names.metaFluMoDL <- function(x) {
+  return(rownames(unclass(x)[[1]]$model))
 }
 
 #' @export
-`names<-.metaFluMoDL` <- function(m, value) {
-  return(m)
+`names<-.metaFluMoDL` <- function(x, value) {
+  return(x)
 }
 
 
 #' @export
-length.metaFluMoDL <- function(m) {
-  return(nrow(unclass(m)[[1]]$model))
+length.metaFluMoDL <- function(x) {
+  return(nrow(unclass(x)[[1]]$model))
 }
 
 #' @export
-`length<-.metaFluMoDL` <- function(m, value) {
-  return(m)
+`length<-.metaFluMoDL` <- function(x, value) {
+  return(x)
 }
 
 
 
 #' @export
-`[[.metaFluMoDL` <- function(m, i) {
-  if (length(i)>1) stop("attempt to select more than one element")
-  nn <- names(m)
-  if (is.character(i) && !(i %in% nn)) stop(sprintf("label '%s' not found in metaFluMoDL object", i))
-  if (is.numeric(i)) {
-    if (i>length(nn)) stop("index out of bounds")
-    if (i<0) stop("index cannot be negative")
-    i <- nn[i]
+`[[.metaFluMoDL` <- function(x, value) {
+  if (length(value)>1) stop("attempt to select more than one element")
+  nn <- names(x)
+  if (is.character(value) && !(value %in% nn))
+    stop(sprintf("label '%s' not found in metaFluMoDL object", value))
+  if (is.numeric(value)) {
+    if (value>length(nn)) stop("index out of bounds")
+    if (value<0) stop("index cannot be negative")
+    value <- nn[value]
   }
-  u <- unclass(m)
+  u <- unclass(x)
   par <- names(u)
   res0 <- lapply(par, function(p) {
-    blup(u[[p]], vcov=TRUE)[[i]]
+    blup(u[[p]], vcov=TRUE)[[value]]
   })
   names(res0) <- par
   res0 <- res0[!sapply(res0, is.null)]
   res <- list(
     type = "blup",
-    description = i,
-    coef = lapply(res0, function(x) x$blup),
-    vcov = lapply(res0, function(x) x$vcov),
+    description = value,
+    coef = lapply(res0, function(y) y$blup),
+    vcov = lapply(res0, function(y) y$vcov),
     pred = NULL
   )
   class(res) <- "summary.FluMoDL"
@@ -140,29 +143,29 @@ length.metaFluMoDL <- function(m) {
 
 
 #' @export
-`[.metaFluMoDL` <- function(m, i) {
-  nn <- names(m)
-  if (is.logical(i)) {
-    i <- which(i[1:length(nn)])
+`[.metaFluMoDL` <- function(x, value) {
+  nn <- names(x)
+  if (is.logical(value)) {
+    value <- which(value[1:length(nn)])
   }
-  if (is.character(i)) {
-    if (sum(!i %in% nn)>0) stop("name(s) not found in object")
-    i <- match(i, nn)
+  if (is.character(value)) {
+    if (sum(!value %in% nn)>0) stop("name(s) not found in object")
+    value <- match(value, nn)
   }
-  res <- lapply(i, function(ii) m[[ii]])
-  names(res) <- nn[i]
+  res <- lapply(value, function(ii) x[[ii]])
+  names(res) <- nn[value]
   res
 }
 
 
 #' @export
-`[[<-.metaFluMoDL` <- function(m, i) {
-  return(m)
+`[[<-.metaFluMoDL` <- function(x, value) {
+  return(x)
 }
 
 
 #' @export
-`[<-.metaFluMoDL` <- function(m, i) {
-  return(m)
+`[<-.metaFluMoDL` <- function(x, value) {
+  return(x)
 }
 

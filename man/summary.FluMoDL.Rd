@@ -4,10 +4,12 @@
 \alias{summary.FluMoDL}
 \title{Summary method for FluMoDL objects}
 \usage{
-\method{summary}{FluMoDL}(m)
+\method{summary}{FluMoDL}(object, ...)
 }
 \arguments{
-\item{m}{An object of class 'FluMoDL'}
+\item{object}{An object of class 'FluMoDL'}
+
+\item{...}{Further arguments passed to or from other methods.}
 }
 \value{
 An object of class 'summary.FluMoDL'. This is a list containing the following elements:

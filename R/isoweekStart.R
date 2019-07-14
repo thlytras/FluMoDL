@@ -1,16 +1,16 @@
 #' Calculate the start date of a given ISO week
 #'
-#' This function takes a vector of ISO week numbers (of the form YYYYWW) and returns a Date 
-#' vector with the first Monday of each week. It is essentially the inverse function of 
+#' This function takes a vector of ISO week numbers (of the form YYYYWW) and returns a Date
+#' vector with the first Monday of each week. It is essentially the inverse function of
 #' \code{\link{isoweek}}.
 #'
-#' @param x A numeric vector of ISO week numbers (of format YYYYWW) 
+#' @param x A numeric vector of ISO week numbers (of format YYYYWW)
 #'
-#' @return A vector of class \code{\link{Date}} and length equal to \code{x}, containing the 
-#'   start date (first Monday) of each ISO week. 
+#' @return A vector of class \code{\link{Date}} and length equal to \code{x}, containing the
+#'   start date (first Monday) of each ISO week.
 #'
 #' @examples
-#' isoweek(201740) # Start of 2017-18 influenza surveillance
+#' isoweekStart(201740) # Start of 2017-18 influenza surveillance
 #' isoweekStart(isoweek(Sys.Date()))
 #'
 #' @export

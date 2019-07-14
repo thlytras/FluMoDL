@@ -27,19 +27,19 @@ hasRSV <- function(x) {
 
 
 #' @export
-hasRSV.FluMoDL <- function(m) {
-  return(!is.null(m$pred$proxyRSV))
+hasRSV.FluMoDL <- function(x) {
+  return(!is.null(x$pred$proxyRSV))
 }
 
 
 #' @export
-hasRSV.summary.FluMoDL <- function(s) {
-  return(!is.null(s$coef$proxyRSV))
+hasRSV.summary.FluMoDL <- function(x) {
+  return(!is.null(x$coef$proxyRSV))
 }
 
 
 #' @export
-hasRSV.metaFluMoDL <- function(m) {
-  return(!is.null(m$proxyRSV))
+hasRSV.metaFluMoDL <- function(x) {
+  return(!is.null(x$proxyRSV))
 }
 

@@ -18,7 +18,7 @@
 #'   estimates for specific values of predictor and lag.
 #'
 #'   For this reason, \code{\link{summary.FluMoDL}} objects created from a
-#'   \link{metaFluMoDL}{multivariate meta-analysis}, containing pooled or BLUP coefficients,
+#'   \link[=metaFluMoDL]{multivariate meta-analysis}, containing pooled or BLUP coefficients,
 #'   do not contain predictions (their \code{$pred} element is \code{NULL})
 #'   because they have no reference to an original predictor.
 #'   This is what \code{addPredictions()} does: it uses the cross-basis matrices from a

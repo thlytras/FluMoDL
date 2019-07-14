@@ -2,15 +2,23 @@
 % Please edit documentation in R/blup.R
 \name{blup.FluMoDL}
 \alias{blup.FluMoDL}
+\alias{blup<-}
 \alias{blup<-.FluMoDL}
 \title{Get or set BLUP coefficients for a FluMoDL object}
 \usage{
-\method{blup}{FluMoDL}(m)
+\method{blup}{FluMoDL}(object, ...)
 
-\method{blup}{FluMoDL}(m) <- value
+blup(object) <- value
+
+\method{blup}{FluMoDL}(object) <- value
 }
 \arguments{
-\item{m}{An object of class \code{\link[=fitFluMoDL]{FluMoDL}}}
+\item{object}{An object of class \code{\link[=fitFluMoDL]{FluMoDL}}}
+
+\item{...}{Further arguments passed to or from other methods.}
+
+\item{value}{An object of class \code{\link{summary.FluMoDL}}, holding BLUP estimates
+to be assigned to \code{x}}
 }
 \value{
 For \code{blup.FluMoDL}, the returned object of class

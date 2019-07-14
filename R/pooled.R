@@ -14,7 +14,7 @@
 #'   proxies (four if \code{\link[=hasRSV]{hasRSV(m)}} is \code{TRUE}). The returned
 #'   object contains the string "pooled" in its \code{$type} element,
 #'   to distinguish it from \code{\link[=summary.FluMoDL]{first-stage model summaries}}
-#'   or \code{\link[metaFluMoDL]{BLUP summaries}} (Best Linear Unbiased Predictor).
+#'   or \code{\link[=metaFluMoDL]{BLUP summaries}} (Best Linear Unbiased Predictor).
 #'   The returned \code{\link{summary.FluMoDL}} object also has no \code{$pred} element,
 #'   as it is not associated with a particular dataset and cross-basis matrices
 #'   (which is a prerequisite to create \code{\link[dlnm]{crosspred}} objects).

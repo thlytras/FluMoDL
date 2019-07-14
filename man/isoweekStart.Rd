@@ -10,16 +10,16 @@ isoweekStart(x)
 \item{x}{A numeric vector of ISO week numbers (of format YYYYWW)}
 }
 \value{
-A vector of class \code{\link{Date}} and length equal to \code{x}, containing the 
+A vector of class \code{\link{Date}} and length equal to \code{x}, containing the
   start date (first Monday) of each ISO week.
 }
 \description{
-This function takes a vector of ISO week numbers (of the form YYYYWW) and returns a Date 
-vector with the first Monday of each week. It is essentially the inverse function of 
+This function takes a vector of ISO week numbers (of the form YYYYWW) and returns a Date
+vector with the first Monday of each week. It is essentially the inverse function of
 \code{\link{isoweek}}.
 }
 \examples{
-isoweek(201740) # Start of 2017-18 influenza surveillance
+isoweekStart(201740) # Start of 2017-18 influenza surveillance
 isoweekStart(isoweek(Sys.Date()))
 
 }
