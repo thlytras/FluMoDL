@@ -51,6 +51,12 @@
 #' run and if there are more than three time periods selected in argument \code{sel}. Set to
 #' \code{FALSE} to suppress the progress bar.
 #'
+#' @param blup If \code{FALSE} (the default), the model coefficients stored in \code{m$model}
+#'   are used for the calculation of attributable mortality. If \code{TRUE}, the coefficients
+#'   \link[=blup.FluMoDL]{stored in the FluMoDL object} are used; if \code{blup=TRUE} but
+#'   \code{blup(m)} is \code{NULL}, a warning is generated. Alternatively, \code{blup} can
+#'   be another object of class \code{\link{summary.FluMoDL}}, whose coefficients are used for the
+#'   calculation.
 #'
 #' @details All attributable mortalities are calculated using the "backward" perspective, meaning
 #'   the mortality at any given day that is attributable to exposures up to 30 days previously
@@ -124,9 +130,21 @@
 #'
 #' @export
 attrMort <- function(m, par=c("H1","H3","B","temp","RSV"), sel="week", from=NULL, to=NULL,
-                         temprange="cold", ci=TRUE, nsim=5000, mcsamples=FALSE, progress=TRUE) {
+        temprange="cold", ci=TRUE, nsim=5000, mcsamples=FALSE, progress=TRUE, blup=FALSE) {
   # Check arguments
-  if (!("FluMoDL" %in% class(m))) stop("Argument `m` should be of class 'FluMoDL'.")
+  if (!inherits(m, "FluMoDL")) stop("Argument `m` should be of class 'FluMoDL'.")
+  if (is.logical(blup) && length(blup)==1) {
+    if (blup) {
+      blup <- blup(m)
+      if (is.null(blup)) warning("Argument 'blup' was TRUE but object 'm' does not contain BLUP estimates.")
+    } else {
+      blup <- NULL
+    }
+  } else if (inherits(blup, "summary.FluMoDL")) {
+    # Do nothing. All OK.
+  } else {
+    stop("Argument 'blup' should be TRUE, FALSE or an object of class 'summary.FluMoDL.")
+  }
   if ((is.null(m$pred$proxyRSV) || is.null(m$data$proxyRSV)) && sum(par=="RSV")>0) {
     par <- par[par!="RSV"]
   }
@@ -221,31 +239,75 @@ attrMort <- function(m, par=c("H1","H3","B","temp","RSV"), sel="week", from=NULL
     }
     if ("RSV" %in% par) {
       basis.proxyRSV <- m$basis$proxyRSV
-      p$RSV <- attrdl(m$data$proxyRSV, basis.proxyRSV, m$data$deaths, m$model, cen=0, type="an",
-                      sub=s)
-      if (ci || mcsamples) mc$RSV <- attrdl(m$data$proxyRSV, basis.proxyRSV, m$data$deaths, m$model,
-                                            cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
+      if (!is.null(blup) && !is.null(blup)$coef$proxyRSV) {
+        p$RSV <- attrdl(m$data$proxyRSV, basis.proxyRSV, m$data$deaths,
+                        coef=blup$coef$proxyRSV, vcov=blup$vcov$proxyRSV,
+                        cen=0, type="an", sub=s)
+        if (ci || mcsamples)
+          mc$RSV <- attrdl(m$data$proxyRSV, basis.proxyRSV, m$data$deaths,
+                           coef=blup$coef$proxyRSV, vcov=blup$vcov$proxyRSV,
+                           cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
+      } else {
+        p$RSV <- attrdl(m$data$proxyRSV, basis.proxyRSV, m$data$deaths, m$model,
+                        cen=0, type="an", sub=s)
+        if (ci || mcsamples)
+          mc$RSV <- attrdl(m$data$proxyRSV, basis.proxyRSV, m$data$deaths, m$model,
+                           cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
+      }
     }
     if ("B" %in% par) {
       basis.proxyB <- m$basis$proxyB
-      p$FluB <- attrdl(m$data$proxyB, basis.proxyB, m$data$deaths, m$model, cen=0, type="an",
-                       sub=s)
-      if (ci || mcsamples) mc$FluB <- attrdl(m$data$proxyB, basis.proxyB, m$data$deaths, m$model,
-                                             cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
+      if (!is.null(blup) && !is.null(blup)$coef$proxyB) {
+        p$FluB <- attrdl(m$data$proxyB, basis.proxyB, m$data$deaths,
+                         coef=blup$coef$proxyB, vcov=blup$vcov$proxyB,
+                         cen=0, type="an", sub=s)
+        if (ci || mcsamples)
+          mc$FluB <- attrdl(m$data$proxyB, basis.proxyB, m$data$deaths,
+                            coef=blup$coef$proxyB, vcov=blup$vcov$proxyB,
+                            cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
+      } else {
+        p$FluB <- attrdl(m$data$proxyB, basis.proxyB, m$data$deaths, m$model,
+                         cen=0, type="an", sub=s)
+        if (ci || mcsamples)
+          mc$FluB <- attrdl(m$data$proxyB, basis.proxyB, m$data$deaths, m$model,
+                            cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
+      }
     }
     if ("H3" %in% par) {
       basis.proxyH3 <- m$basis$proxyH3
-      p$FluH3 <- attrdl(m$data$proxyH3, basis.proxyH3, m$data$deaths, m$model, cen=0, type="an",
-                        sub=s)
-      if (ci || mcsamples) mc$FluH3 <- attrdl(m$data$proxyH3, basis.proxyH3, m$data$deaths, m$model,
-                                              cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
+      if (!is.null(blup) && !is.null(blup)$coef$proxyH3) {
+        p$FluH3 <- attrdl(m$data$proxyH3, basis.proxyH3, m$data$deaths,
+                          coef=blup$coef$proxyH3, vcov=blup$vcov$proxyH3,
+                          cen=0, type="an", sub=s)
+        if (ci || mcsamples)
+          mc$FluH3 <- attrdl(m$data$proxyH3, basis.proxyH3, m$data$deaths,
+                             coef=blup$coef$proxyH3, vcov=blup$vcov$proxyH3,
+                             cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
+      } else {
+        p$FluH3 <- attrdl(m$data$proxyH3, basis.proxyH3, m$data$deaths, m$model,
+                          cen=0, type="an", sub=s)
+        if (ci || mcsamples)
+          mc$FluH3 <- attrdl(m$data$proxyH3, basis.proxyH3, m$data$deaths, m$model,
+                             cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
+      }
     }
     if ("H1" %in% par) {
       basis.proxyH1 <- m$basis$proxyH1
-      p$FluH1 <- attrdl(m$data$proxyH1, basis.proxyH1, m$data$deaths, m$model, cen=0, type="an",
-                        sub=s)
-      if (ci || mcsamples) mc$FluH1 <- attrdl(m$data$proxyH1, basis.proxyH1, m$data$deaths, m$model,
-                                              cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
+      if (!is.null(blup) && !is.null(blup)$coef$proxyH1) {
+        p$FluH1 <- attrdl(m$data$proxyH1, basis.proxyH1, m$data$deaths,
+                          coef=blup$coef$proxyH1, vcov=blup$vcov$proxyH1,
+                          cen=0, type="an", sub=s)
+        if (ci || mcsamples)
+          mc$FluH1 <- attrdl(m$data$proxyH1, basis.proxyH1, m$data$deaths,
+                             coef=blup$coef$proxyH1, vcov=blup$vcov$proxyH1,
+                             cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
+      } else {
+        p$FluH1 <- attrdl(m$data$proxyH1, basis.proxyH1, m$data$deaths, m$model,
+                          cen=0, type="an", sub=s)
+        if (ci || mcsamples)
+          mc$FluH1 <- attrdl(m$data$proxyH1, basis.proxyH1, m$data$deaths, m$model,
+                             cen=0, type="an", sub=s, tot=FALSE, sim=TRUE, nsim=nsim)
+      }
     }
     if (sum(is.na(match(c("FluH1","FluH3","FluB"), names(p))))==0) {
       p$AllFlu <- with(p, FluH1+FluH3+FluB)

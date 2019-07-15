@@ -6,7 +6,7 @@
 \usage{
 attrMort(m, par = c("H1", "H3", "B", "temp", "RSV"), sel = "week",
   from = NULL, to = NULL, temprange = "cold", ci = TRUE,
-  nsim = 5000, mcsamples = FALSE, progress = TRUE)
+  nsim = 5000, mcsamples = FALSE, progress = TRUE, blup = FALSE)
 }
 \arguments{
 \item{m}{An object of class \code{FluMoDL}.}
@@ -56,6 +56,13 @@ See below.}
 \item{progress}{If \code{TRUE}, a progress bar appears if Monte Carlo simulations are
 run and if there are more than three time periods selected in argument \code{sel}. Set to
 \code{FALSE} to suppress the progress bar.}
+
+\item{blup}{If \code{FALSE} (the default), the model coefficients stored in \code{m$model}
+are used for the calculation of attributable mortality. If \code{TRUE}, the coefficients
+\link[=blup.FluMoDL]{stored in the FluMoDL object} are used; if \code{blup=TRUE} but
+\code{blup(m)} is \code{NULL}, a warning is generated. Alternatively, \code{blup} can
+be another object of class \code{\link{summary.FluMoDL}}, whose coefficients are used for the
+calculation.}
 }
 \value{
 If \code{mcsamples=FALSE} (the default), a data.frame is returned with columns named
