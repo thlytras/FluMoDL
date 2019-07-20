@@ -18,7 +18,7 @@ These should all cover the same time period.
 
 The package provides functions to facilitate fitting a FluMoDL, summarizing and plotting the
 results of the analysis, and calculating attributable mortalities (including empirical 95% 
-Confidence Intervals). It will also include the capability to pool analytical results together
+Confidence Intervals). It also includes the capability to pool analytical results together
 and calculate attributable mortalities based on BLUP (Best Unbiased Linear Predictor) estimates.
 
 **Installation**
