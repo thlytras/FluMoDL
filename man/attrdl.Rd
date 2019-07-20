@@ -99,6 +99,7 @@ Given the lag-specific estimates are not available in this case, only the forwar
 attributable risk (dir="forw") can be computed. See Gasparrini and Leone (2014) for further info.
 }
 \examples{
+\donttest{
 # load the package
 library(FluMoDL)  # package dlnm is automatically loaded
 
@@ -128,6 +129,8 @@ attrdl(chicagoNMMAPS$temp,cb,chicagoNMMAPS$death,model,cen=21,range=c(-100,21))
 # daily attributable deaths in the second month
 attrdl(chicagoNMMAPS$temp,cb,chicagoNMMAPS$death,model,type="an",
    tot=FALSE,cen=21)[31:60]
+
+}
 
 }
 \references{

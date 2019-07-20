@@ -82,7 +82,7 @@
 #' @importFrom utils packageVersion
 #' @importFrom utils getFromNamespace
 #'
-#' @examples
+#' @examples \donttest{
 #' # load the package
 #' library(FluMoDL)  # package dlnm is automatically loaded
 #'
@@ -113,6 +113,8 @@
 #' attrdl(chicagoNMMAPS$temp,cb,chicagoNMMAPS$death,model,type="an",
 #'    tot=FALSE,cen=21)[31:60]
 #'
+#' }
+#'
 #' @export
 
 attrdl <- function(x,basis,cases,model=NULL,coef=NULL,vcov=NULL,type="af",
@@ -123,8 +125,8 @@ attrdl <- function(x,basis,cases,model=NULL,coef=NULL,vcov=NULL,type="af",
   .getlink <- getFromNamespace("getlink", "dlnm")
   .seqlag <- getFromNamespace("seqlag", "dlnm")
   .mkXpred <- getFromNamespace("mkXpred", "dlnm")
-  
-  
+
+
   # CHECK VERSION OF THE DLNM PACKAGE
   if(packageVersion("dlnm")<"2.2.0")
     stop("update dlnm package to version >= 2.2.0")
