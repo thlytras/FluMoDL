@@ -23,10 +23,11 @@ and calculate attributable mortalities based on BLUP (Best Unbiased Linear Predi
 
 **Installation**
 
-Package ['dlnm'](https://cran.r-project.org/web/packages/dlnm/index.html) by Antonio Gasparrini 
-is the only dependency for the FluMoDL package. You need to have it installed from CRAN with
-`install.packages("dlnm")`. Also install the devtools package if you don't already have it:
-`install.packages("devtools")`.
+Packages ['dlnm'](https://CRAN.R-project.org/package=dlnm) and 
+['mvmeta'](https://CRAN.R-project.org/package=mvmeta), by Antonio Gasparrini are the only
+dependencies for the FluMoDL package. You need to have those installed from CRAN with
+`install.packages(c("dlnm","mvmeta"))`. Also install the devtools package if you don't 
+already have it: `install.packages("devtools")`.
 
 Then to install FluMoDL, open R and give:
 
@@ -39,7 +40,8 @@ Check back here often for new updates of the package!
 See package documentation. One uses the function `fitFluMoDL()` to fit the model on the available
 surveillance data, then gives the fitted model object to `attrMort()` to calculate attributable 
 mortalities (to influenza, temperature and -optionally- RSV). Check the help pages of these two
-functions for details. In order to try these out, the package also includes some example surveillance data from Greece (see `?greece`).
+functions for details. In order to try these out, the package also includes some example
+surveillance data from Greece (see `?greece`).
 
 **References**
 

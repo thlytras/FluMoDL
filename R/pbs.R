@@ -14,7 +14,7 @@
 #' beyond 'Boundary.knots'. Typical Bourday knots are start and end values of period.
 #'
 #' @details This function and documentation is copied from the CRAN package
-#' \href{https://cran.r-project.org/web/packages/pbs/index.html}{pbs}
+#' \href{https://CRAN.R-project.org/package=pbs}{pbs}
 #' by Shuangcai Wang <\email{swang1@@gmail.com}>
 #'
 #' @return A matrix of dimension 'length(x) * (df)', where either 'df' was supplied or if

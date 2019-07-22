@@ -15,7 +15,7 @@
 #'
 #' @details \code{NOAA_allStations()} downloads the list of all available weather
 #' stations from NOAA, found in
-#' \url{ftp://ftp@ftp.ncdc.noaa.gov/pub/data/noaa/isd-history.csv}, and returns it
+#' \url{ftp://ftp.ncdc.noaa.gov/pub/data/noaa/isd-history.csv}, and returns it
 #' as a \code{data.frame}. The data are downloaded only once per R session,
 #' the first time this function is used, and are then stored internally for
 #' further retrievals.
