@@ -47,14 +47,14 @@ NOAA_allStations <- function(force_retrieve=FALSE) {
   # `internal_state` is an environment object found in sysdata.rda
   # see data-raw/setup_sysdata.R
   if (is.null(internal_state$NOAAsites) || force_retrieve) {
-    cat("Downloading list of weather stations from NOAA (waiting for server)... ")
+    message("Downloading list of weather stations from NOAA (waiting for server)... ")
     NOAAsites <- (function() {
       sites <- read.csv("ftp://ftp@ftp.ncdc.noaa.gov/pub/data/noaa/isd-history.csv",
           stringsAsFactors=FALSE)
       names(sites) <- tolower(names(sites))
       sites
     })()
-    cat("Done.\n")
+    message("Download finished.\n")
     # Explicitly set names
     # Formatting and cleaning
       NOAAsites$begin <- as.Date(as.character(NOAAsites$begin), format="%Y%m%d")
