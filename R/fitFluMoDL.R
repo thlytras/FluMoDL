@@ -160,8 +160,23 @@ fitFluMoDL <- function(deaths, temp, dates, proxyH1, proxyH3, proxyB, yearweek,
                         function(x) if (!is.null(get(x)) && sum(is.na(get(x)))>0) return(x) else return(character(0))))
   if (length(miss)>0)
     stop(sprintf("No missing values are allowed for argument%s `%s`.",
-                 ifelse(length(miss)>1, "(s)", ""),
+                 ifelse(length(miss)>1, "s", ""),
                  paste(miss, collapse="`, `")))
+
+
+  # Check for missing values
+  isZero <- unlist(sapply(c("temp","proxyH1","proxyH3","proxyB","proxyRSV"),
+                        function(x) if (!is.null(get(x)) && sum(get(x)!=0)==0) return(x) else return(character(0))))
+  if (length(isZero)>0)
+    stop(sprintf("Argument%s `%s` include%s only zeroes.",
+                 ifelse(length(isZero)>1, "s", ""),
+                 paste(isZero, collapse="`, `"),
+                 ifelse(length(isZero)>1, "", "s")))
+
+  # Check for perfectly collinear proxies
+  if (isTRUE(all.equal(proxyH1, proxyH3))) stop("Arguments `proxyH1` and `proxyH3` are identical.")
+  if (isTRUE(all.equal(proxyH1, proxyB))) stop("Arguments `proxyH1` and `proxyB` are identical.")
+  if (isTRUE(all.equal(proxyH3, proxyB))) stop("Arguments `proxyH3` and `proxyB` are identical.")
 
   # Check date range
   range_dates <- range(dates)
