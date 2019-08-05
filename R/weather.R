@@ -49,7 +49,7 @@ NOAA_allStations <- function(force_retrieve=FALSE) {
   if (is.null(internal_state$NOAAsites) || force_retrieve) {
     message("Downloading list of weather stations from NOAA (waiting for server)... ")
     NOAAsites <- (function() {
-      sites <- read.csv("ftp://ftp@ftp.ncdc.noaa.gov/pub/data/noaa/isd-history.csv",
+      sites <- read.csv("ftp://ftp.ncdc.noaa.gov/pub/data/noaa/isd-history.csv",
           stringsAsFactors=FALSE)
       names(sites) <- tolower(names(sites))
       sites
