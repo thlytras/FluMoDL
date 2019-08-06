@@ -70,7 +70,7 @@ print.summary.FluMoDL <- function(x, ...) {
   cat("\n** FluMoDL model summary **\n\n")
   if (length(x$type)==1) {
     if (x$type=="summary") {
-      cat("Object is a first-stage model sumary.\n")
+      cat("Object is a first-stage model summary.\n")
     } else if (x$type=="blup") {
       cat("Object contains BLUP estimates (Best Unbiased Linear Predictor).\n")
     } else if (x$type=="pooled") {

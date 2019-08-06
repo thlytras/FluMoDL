@@ -61,6 +61,9 @@
 #'
 #' @export
 metaFluMoDL <- function(summaries, par=c("H1","H3","B","RSV")) {
+  if (length(summaries)<2 || length(unique(sapply(summaries, class)))!=1 ||
+      unique(sapply(summaries, class))!="summary.FluMoDL")
+    stop("Argument `summaries` must be a list of objects of class `summary.FluMoDL`.")
   nm <- names(summaries)
   par <- paste0("proxy", par)
   # Get the number of summaries with data for each parameter

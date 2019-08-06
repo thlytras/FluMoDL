@@ -243,7 +243,7 @@ attrMort <- function(m, par=c("H1","H3","B","temp","RSV"), sel="week", from=NULL
     }
     if ("RSV" %in% par) {
       basis.proxyRSV <- m$basis$proxyRSV
-      if (!is.null(blup) && !is.null(blup)$coef$proxyRSV) {
+      if (!is.null(blup) && !is.null(blup$coef$proxyRSV)) {
         p$RSV <- attrdl(m$data$proxyRSV, basis.proxyRSV, m$data$deaths,
                         coef=blup$coef$proxyRSV, vcov=blup$vcov$proxyRSV,
                         cen=0, type="an", sub=s)
@@ -261,7 +261,7 @@ attrMort <- function(m, par=c("H1","H3","B","temp","RSV"), sel="week", from=NULL
     }
     if ("B" %in% par) {
       basis.proxyB <- m$basis$proxyB
-      if (!is.null(blup) && !is.null(blup)$coef$proxyB) {
+      if (!is.null(blup) && !is.null(blup$coef$proxyB)) {
         p$FluB <- attrdl(m$data$proxyB, basis.proxyB, m$data$deaths,
                          coef=blup$coef$proxyB, vcov=blup$vcov$proxyB,
                          cen=0, type="an", sub=s)
@@ -279,7 +279,7 @@ attrMort <- function(m, par=c("H1","H3","B","temp","RSV"), sel="week", from=NULL
     }
     if ("H3" %in% par) {
       basis.proxyH3 <- m$basis$proxyH3
-      if (!is.null(blup) && !is.null(blup)$coef$proxyH3) {
+      if (!is.null(blup) && !is.null(blup$coef$proxyH3)) {
         p$FluH3 <- attrdl(m$data$proxyH3, basis.proxyH3, m$data$deaths,
                           coef=blup$coef$proxyH3, vcov=blup$vcov$proxyH3,
                           cen=0, type="an", sub=s)
@@ -297,7 +297,7 @@ attrMort <- function(m, par=c("H1","H3","B","temp","RSV"), sel="week", from=NULL
     }
     if ("H1" %in% par) {
       basis.proxyH1 <- m$basis$proxyH1
-      if (!is.null(blup) && !is.null(blup)$coef$proxyH1) {
+      if (!is.null(blup) && !is.null(blup$coef$proxyH1)) {
         p$FluH1 <- attrdl(m$data$proxyH1, basis.proxyH1, m$data$deaths,
                           coef=blup$coef$proxyH1, vcov=blup$vcov$proxyH1,
                           cen=0, type="an", sub=s)

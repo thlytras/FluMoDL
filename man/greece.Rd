@@ -20,17 +20,18 @@ data(greece)
 \description{
 Surveillance data from Greece used to estimate influenza-attributable
 mortality using FluMoDL, covering the period from May 2013 to October 2017.
-Contains the following:
-* A daily time series of (all-cause) deaths
-* A time series of daily mean temperatures
-* A weekly series of Influenza-Like Illness (ILI) rates, calculated via
+Contains the following:\itemize{
+  \item A daily time series of (all-cause) deaths
+  \item A time series of daily mean temperatures
+  \item A weekly series of Influenza-Like Illness (ILI) rates, calculated via
 sentinel surveillance
-* Three weekly series of laboratory sample percentage positives by influenza
+  \item Three weekly series of laboratory sample percentage positives by influenza
 type and subtype: A(H1N1)pdm09, A(H3N2) and B. These can be multiplied with
 the respective ILI rates, to create type-specific influenza incidence proxies
 (see Goldstein et al.
 \href{https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.1001051}{PLoS Med.}
 2011;8(7):e1001051)
+}
 }
 \examples{
 data(greece)
