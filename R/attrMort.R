@@ -324,7 +324,7 @@ attrMort <- function(m, par=c("H1","H3","B","temp","RSV"), sel="week", from=NULL
       )
     } else if (ci) {
       res <- round(c(sapply(rev(names(p)), function(n) {
-        c(p[[n]], quantile(mc[[n]], c(0.025, 0.975)))
+        c(p[[n]], quantile(mc[[n]], c(0.025, 0.975), na.rm=TRUE))
       })))
       names(res) <- paste0(rep(rev(names(p)),each=3), c("",".lo",".hi"))
     } else {
