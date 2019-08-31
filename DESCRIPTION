@@ -1,6 +1,6 @@
 Package: FluMoDL
 Type: Package
-Imports: stats, utils, splines, tcltk, tsModel
+Imports: stats, utils, splines, tsModel
 Title: Influenza-Attributable Mortality with Distributed-Lag Models
 Version: 0.0.2
 Authors@R: 

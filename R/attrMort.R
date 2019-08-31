@@ -99,6 +99,8 @@
 #' \href{https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/1471-2288-14-55}{BMC Med Res Methodol} 2014;14:55.
 #' }
 #'
+#' @importFrom utils read.csv setTxtProgressBar txtProgressBar
+#'
 #' @examples
 #' data(greece) # Use example surveillance data from Greece
 #' m <- with(greece, fitFluMoDL(deaths = daily$deaths,
@@ -212,12 +214,12 @@ attrMort <- function(m, par=c("H1","H3","B","temp","RSV"), sel="week", from=NULL
   if (!ci || length(selIndices)<=3) progress <- FALSE
   if (progress) {
     i=0
-    pb <- tcltk::tkProgressBar("FluMoDL",
-                               sprintf("Calculating for %s selections...", length(selIndices)),
-                               min=0, max=length(selIndices), initial=0)
+    pb <- txtProgressBar(title = "FluMoDL",
+                         label = sprintf("Calculating for %s selections...", length(selIndices)),
+                         min=0, max=length(selIndices), initial=0, style=3)
   }
   res <- lapply(selIndices, function(s) {
-    if (progress) { i <<- i+1; tcltk::setTkProgressBar(pb, i) }
+    if (progress) { i <<- i+1; setTxtProgressBar(pb, i) }
     p <- list()
     mc <- list()
     if ("temp" %in% par) {

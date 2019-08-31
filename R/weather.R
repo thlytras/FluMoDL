@@ -40,7 +40,7 @@
 #'
 #' Note that columns \code{begin} and \code{end} in the output are of class \code{Date}.
 #'
-#' @importFrom utils read.csv
+#' @importFrom utils read.csv setTxtProgressBar txtProgressBar
 #'
 #' @export
 NOAA_allStations <- function(force_retrieve=FALSE) {
@@ -193,15 +193,15 @@ NOAA_getGSOD <- function(stations, years, match.columns="station.name", progress
   if (nstations<=3) progress <- FALSE
   if (progress) {
     i=0
-    pb <- tcltk::tkProgressBar("FluMoDL",
-        sprintf("Downloading %s files from NOAA via FTP...", nstations),
-        min=0, max=nstations, initial=0)
+    pb <- txtProgressBar(title = "FluMoDL",
+        label = sprintf("Downloading %s files from NOAA via FTP...", nstations),
+        min=0, max=nstations, initial=0, style=3)
   }
   t <- tempfile()
   res <- do.call(rbind, lapply(years, function(y) {
     files <- sprintf("ftp://ftp.ncdc.noaa.gov/pub/data/gsod/%s/%s-%s-%s.op.gz", y, stations$usaf, stations$wban, y)
     res <- do.call(rbind, lapply(files, function(f) {
-      if (progress) { i <<- i+1; tcltk::setTkProgressBar(pb, i) }
+      if (progress) { i <<- i+1; setTxtProgressBar(pb, i) }
       suppressWarnings({
         b <- try({download.file(f, t, quiet=TRUE)}, silent=TRUE)
       })
