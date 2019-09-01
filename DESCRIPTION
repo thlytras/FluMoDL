@@ -2,7 +2,7 @@ Package: FluMoDL
 Type: Package
 Imports: stats, utils, splines, tsModel
 Title: Influenza-Attributable Mortality with Distributed-Lag Models
-Version: 0.0.2
+Version: 0.0.3
 Authors@R: 
     c(person(given="Theodore", family="Lytras", 
              email="thlytras@gmail.com", role=c("aut","cre"), 
