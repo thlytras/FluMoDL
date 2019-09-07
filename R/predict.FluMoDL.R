@@ -133,8 +133,11 @@ predict.FluMoDL <- function(object, temp=NULL,
     predictors <- cbind(predictors, basis.proxyRSV)
   }
 
-  predictors <- cbind(predictors, sapply(2:7, function(i) object$data$dow==i),
-      object$data$t, pbs(object$data$doy, knots=c(91,182,274)))
+  predictors <- cbind(predictors, 
+        sapply(2:7, function(i) object$data$dow==i), object$data$t)
+  if (hasPeriodic(object)) {
+    predictors <- cbind(predictors, pbs(object$data$doy, knots=c(91,182,274)))
+  }
   fit <- c(exp(predictors %*% coef(object$model)))
 
   if (byWeek) {

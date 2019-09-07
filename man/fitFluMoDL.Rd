@@ -5,7 +5,7 @@
 \title{Fit a FluMoDL object}
 \usage{
 fitFluMoDL(deaths, temp, dates, proxyH1, proxyH3, proxyB, yearweek,
-  proxyRSV = NULL, smooth = TRUE)
+  proxyRSV = NULL, smooth = TRUE, periodic = TRUE)
 }
 \arguments{
 \item{deaths}{A vector of \emph{daily} deaths, of equal length to argument \code{`dates`}}
@@ -31,6 +31,9 @@ might be removed in the future.)}
 
 \item{smooth}{\code{TRUE} (the default) if smoothing is to be applied to the influenza
 incidence proxies when converting them to a daily series.}
+
+\item{periodic}{Should a periodic B-spline term be included in the model? 
+Defaults to \code{TRUE}.}
 }
 \value{
 An object of class 'FluMoDL'. This is a list containing the following elements:
@@ -101,7 +104,8 @@ FluMoDL uses a DLNM with the \emph{daily} number of deaths as the outcome. Covar
     lag-response relationship is specified as above (for temperature).
 
     \item A periodic B-spline term to model seasonality, with three equidistant internal
-    knots according to day of the year.
+    knots according to day of the year. Can optionally be suppressed by setting argument
+    \code{periodic} to \code{FALSE}.
 
     \item A linear trend, and a factor variable for day of the week.
 

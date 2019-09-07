@@ -1,6 +1,6 @@
 #' Does object have a term for RSV?
 #'
-#' This method check whether a 'FluMoDL' or 'summary.FluMoDL' object contains a
+#' This method checks whether a 'FluMoDL' or 'summary.FluMoDL' object contains a
 #' \code{\link[dlnm:crossbasis]{cross-basis term}} for RSV (Respiratory Syncytial Virus)
 #' incidence proxy, or contains only terms for influenza incidence proxies.
 #'

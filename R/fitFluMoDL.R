@@ -28,6 +28,8 @@
 #'   might be removed in the future.)
 #' @param smooth \code{TRUE} (the default) if smoothing is to be applied to the influenza
 #'   incidence proxies when converting them to a daily series.
+#' @param periodic Should a periodic B-spline term be included in the model? 
+#'   Defaults to \code{TRUE}.
 #'
 #' @details FluMoDL uses a DLNM with the \emph{daily} number of deaths as the outcome. Covariates
 #'   include the following:
@@ -46,7 +48,8 @@
 #'     lag-response relationship is specified as above (for temperature).
 #'
 #'     \item A periodic B-spline term to model seasonality, with three equidistant internal
-#'     knots according to day of the year.
+#'     knots according to day of the year. Can optionally be suppressed by setting argument
+#'     \code{periodic} to \code{FALSE}.
 #'
 #'     \item A linear trend, and a factor variable for day of the week.
 #'
@@ -139,7 +142,7 @@
 #'
 #' @export
 fitFluMoDL <- function(deaths, temp, dates, proxyH1, proxyH3, proxyB, yearweek,
-                           proxyRSV=NULL, smooth=TRUE) {
+                           proxyRSV=NULL, smooth=TRUE, periodic=TRUE) {
 
   # Checking all parameters for consistency
   if (class(dates)!="Date") stop("Argument `dates` must be a vector of class 'Date'.")
@@ -240,12 +243,22 @@ fitFluMoDL <- function(deaths, temp, dates, proxyH1, proxyH3, proxyB, yearweek,
   dat$t <- 1:nrow(dat)   # Linear trend
   dat$doy <- as.integer(format(dat$dates, "%j"))   # Day of the year
   dat$dow <- as.factor(format(dat$dates,"%u"))   # Day of the week
-  if (is.null(proxyRSV)) {
-    model <- glm(deaths ~ basis.temp + basis.proxyH1 + basis.proxyH3 + basis.proxyB +
-                   dow + t + pbs(doy, knots=c(91,182,274)), data=dat, family="quasipoisson")
+  if (periodic) {
+    if (is.null(proxyRSV)) {
+      model <- glm(deaths ~ basis.temp + basis.proxyH1 + basis.proxyH3 + basis.proxyB +
+                     dow + t + pbs(doy, knots=c(91,182,274)), data=dat, family="quasipoisson")
+    } else {
+      model <- glm(deaths ~ basis.temp + basis.proxyH1 + basis.proxyH3 + basis.proxyB +
+                     basis.proxyRSV + dow + t + pbs(doy, knots=c(91,182,274)), data=dat, family="quasipoisson")
+    }
   } else {
-    model <- glm(deaths ~ basis.temp + basis.proxyH1 + basis.proxyH3 + basis.proxyB +
-                   basis.proxyRSV + dow + t + pbs(doy, knots=c(91,182,274)), data=dat, family="quasipoisson")
+    if (is.null(proxyRSV)) {
+      model <- glm(deaths ~ basis.temp + basis.proxyH1 + basis.proxyH3 + basis.proxyB +
+                     dow + t, data=dat, family="quasipoisson")
+    } else {
+      model <- glm(deaths ~ basis.temp + basis.proxyH1 + basis.proxyH3 + basis.proxyB +
+                     basis.proxyRSV + dow + t, data=dat, family="quasipoisson")
+    }
   }
 
   # Make predictions
@@ -294,6 +307,8 @@ print.FluMoDL <- function(x, ...) {
   cat(sprintf("From %s to %s (%s rows)\n",
               min(x$data$dates, na.rm=TRUE), max(x$data$dates, na.rm=TRUE), nrow(x$data)))
   cat(sprintf("%s total deaths in the data\n", sum(x$data$deaths)))
+  cat(sprintf("Object %s a periodic term.\n", 
+              ifelse(hasPeriodic(x), "includes", "does NOT include")))
   cat(sprintf("Minimum mortality point (temperature): %s\n", x$MMP))
   mid <- ceiling(length(x$pred$proxyH1$allfit)/2)
   cat(sprintf("Relative Risk for an indicative influenza incidence proxy of %s: (95%% CI)\n",
