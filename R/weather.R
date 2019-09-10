@@ -210,7 +210,8 @@ NOAA_getGSOD <- function(stations, years, match.columns="station.name", progress
                            widths=diff(c(0,6,12,22,30,33,41,44,52,55,63,66,73,76,83,86,93,100,108,109,116,117,123,124,130,138)),
                            col.names=c("usaf", "wban", "date", "temp", "tempC", "dewp", "dewpC", "slp", "slpC", "stp",
                                        "stpC", "visib", "visibC", "wdsp", "wdspC", "mxspd", "gust", "maxtemp", "maxtempF", "mintemp",
-                                       "mintempF", "prcp", "prcpF", "sndp", "frshtt")),
+                                       "mintempF", "prcp", "prcpF", "sndp", "frshtt"),
+                           colClasses=c("usaf"="character")),
                   silent = TRUE)
         if (class(bb)!="try-error") {
           return(bb)
